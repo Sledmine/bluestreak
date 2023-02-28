@@ -1,6 +1,7 @@
 --***************************************************************************
 --*				 		 JMS Exporter by TheGhost							*
 --*						 Edited by CtrlAltDestroy							*
+--*						 Edited by ChokingVictim							*
 --*					   for 3ds Max v5+ and gmax v1.2						*
 --***************************************************************************
 --*		Features:															*
@@ -49,6 +50,7 @@ marker_array = #()
 marker_parent_index = #()
 marker_translation = #()
 marker_rotation = #()
+marker_radius = #()
 
 geometry_objects = #()
 geom_parent_index = #()
@@ -115,7 +117,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 	button go_button "Export JMS Data" pos:[38,188] width:128 height:31
 	
 	label lbl7 "TheGhost/CtrlAltDestroy" pos:[8,235] width:150 height:14 enabled:false
-	label lbl8 "v1.0.2" pos:[167,236] width:32 height:14 enabled:false
+	label lbl8 "v1.0.3" pos:[167,236] width:32 height:14 enabled:false
 	
 	on roll open do
 	(
@@ -152,6 +154,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 		marker_parent_index = #()
 		marker_translation = #()
 		marker_rotation = #()
+		marker_radius = #()
 		
 		geometry_objects = #()
 		geom_parent_index = #()
@@ -491,6 +494,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				in coordsys parent marker_translation[m] = marker_array[m].pos
 				in coordsys parent rot = marker_array[m].rotation
 				marker_rotation[m] = normalize (quat -rot.x -rot.y -rot.z rot.w)
+				marker_radius[m] = marker_array[m].radius
 			)
 		)
 		
@@ -800,7 +804,8 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					format "%\n-1\n" (substring marker_array[m].name 2 -1) to:jms
 					format "%\n" (marker_parent_index[m] - 1) to:jms
 					format "%\t%\t%\t%\n" marker_rotation[m].x marker_rotation[m].y marker_rotation[m].z marker_rotation[m].w to:jms
-					format "%\t%\t%\n2.0\n" marker_translation[m].x marker_translation[m].y marker_translation[m].z to:jms
+					format "%\t%\t%\n" marker_translation[m].x marker_translation[m].y marker_translation[m].z to:jms
+					format "%\n" marker_radius[m] to:jms
 				)
 				
 				region_count = geom_regions.count
