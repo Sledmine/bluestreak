@@ -1,10 +1,12 @@
 --***************************************************************************
---*						  JMS Exporter by TheGhost							*
+--*				 		 JMS Exporter by TheGhost							*
+--*						 Edited by CtrlAltDestroy							*
 --*					   for 3ds Max v5+ and gmax v1.2						*
 --***************************************************************************
 --*		Features:															*
 --*			- Exports all types of model geometry							*
 --*			- Exports perfect texture coordinates							*
+--*			- Exports regions												*
 --*			- Exports proper, well-calculated vertex normals				*
 --*			- Exports all nodes and markers (for weapons, vehicles, etc.)	*
 --*			- Exports biped systems or bones for character models			*
@@ -51,6 +53,7 @@ marker_rotation = #()
 geometry_objects = #()
 geom_parent_index = #()
 geom_materials = #()
+geom_regions = #()
 geom_bone_array = #()
 geom_object_has_skin = #()
 geom_object_has_tverts = #()
@@ -60,6 +63,7 @@ face_matID = #()
 face_SG = #()
 face_tverts = #()
 face_shader_index = #()
+face_region_index = #()
 
 vert_pos = #()
 vert_node0index = #()
@@ -105,13 +109,13 @@ rollout roll "JMS Model Exporter" width:209 height:254
 	GroupBox grp3 "Export options" pos:[7,82] width:194 height:40
 	checkbox chk_weight "Export vertex weights (rigged)" pos:[17,100] width:173 height:16 checked:true
 	
-	GroupBox grp4 "Export Method" pos:[7,127] width:194 height:103
+	groupBox grp4 "Export Method" pos:[7,127] width:194 height:103
 	checkbox chk_jms "Save to JMS File  (3ds max only)" pos:[17,146] width:174 height:16 checked:true
 	checkbox chk_stream "Stream with MAXScript Listener" pos:[17,165] width:174 height:16
 	button go_button "Export JMS Data" pos:[38,188] width:128 height:31
 	
-	label lbl7 "Script by TheGhost" pos:[8,235] width:101 height:14 enabled:false
-	label lbl8 "v1.0.1" pos:[167,236] width:36 height:14 enabled:false
+	label lbl7 "TheGhost/CtrlAltDestroy" pos:[8,235] width:150 height:14 enabled:false
+	label lbl8 "v1.0.2" pos:[167,236] width:32 height:14 enabled:false
 	
 	on roll open do
 	(
@@ -129,35 +133,6 @@ rollout roll "JMS Model Exporter" width:209 height:254
 			chk_jms.enabled = true
 			chk_jms.checked = true
 			chk_stream.checked = false
-		)
-	)
-	on chk_jms changed theState do
-	(
-		if theState == true then
-		(
-			chk_stream.checked = false
-		)
-		else
-		(
-			chk_stream.checked = true
-		)
-	)
-	on chk_stream changed theState do
-	(
-		if theState == true then
-		(
-			chk_jms.checked = false
-		)
-		else
-		(
-			if chk_jms.enabled == true then
-			(
-				chk_jms.checked = true
-			)
-			else
-			(
-				chk_stream.checked = true
-			)
 		)
 	)
 	on go_button pressed do
@@ -181,6 +156,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 		geometry_objects = #()
 		geom_parent_index = #()
 		geom_materials = #()
+		geom_regions = #()
 		geom_bone_array = #()
 		geom_object_has_skin = #()
 		geom_object_has_tverts = #()
@@ -190,6 +166,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 		face_SG = #()
 		face_tverts = #()
 		face_shader_index = #()
+		face_region_index = #()
 		
 		vert_pos = #()
 		vert_node0index = #()
@@ -543,6 +520,16 @@ rollout roll "JMS Model Exporter" width:209 height:254
 						append geom_materials geometry_objects[g].material
 					)
 				)
+				
+				max modify mode
+				modPanel.setCurrentObject geometry_objects[g].baseObject
+				for r = 1 to geometry_objects[g].faces.selSetNames.count do
+				(
+					if findItem geom_regions geometry_objects[g].faces.selSetNames[r] == 0 then
+					(
+						append geom_regions geometry_objects[g].faces.selSetNames[r]
+					)
+				)
 			)
 			
 			if geometry_objects.count != 0 then
@@ -554,15 +541,45 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				)
 				for g = 1 to geometry_objects.count do
 				(
+					clearSelection ()
+					select geometry_objects[g]
+					if geometry_objects[g].modifiers[#'turn to mesh'] == undefined then (addModifier geometry_objects[g] (turn_to_mesh ()))
 					tmesh = snapshotAsMesh geometry_objects[g]
 					geom_mesh_faces[g] = getNumFaces tmesh
 					if getNumTVerts tmesh > 0 do geom_object_has_tverts[g] = true
 					
+					face_verts = #()
+					face_matID = #()
+					face_regionID = #()
+					face_SG = #()
+					face_tverts = #()
+					
+					max modify mode
+					modPanel.setCurrentObject geometry_objects[g].baseObject
+					for r = 1 to geom_regions.count do
+					(
+						try
+						(
+							for f = 1 to geometry_objects[g].faces[geom_regions[r]].count do
+							(
+								faceIndex = geometry_objects[g].faces[geom_regions[r]][f].index
+								if face_regionID[faceIndex] == undefined then
+								(
+									face_regionID[faceIndex] = r - 1
+								)
+							)
+						)
+						catch ()
+					)
+					
 					if chk_weight.checked == true then
 					(
-						if classOf geometry_objects[g].modifiers[1] == Skin then
+						if geometry_objects[g].modifiers[#'skin'] != undefined then
 						(
-							theSkin = geometry_objects[g].modifiers[1]
+							theSkin = geometry_objects[g].modifiers[#'skin']
+							max modify mode
+							modPanel.setCurrentObject theSkin
+							subobjectLevel = 1
 							numBones = skinOps.getNumberBones theSkin
 							if numBones > 1 then
 							(
@@ -570,12 +587,13 @@ rollout roll "JMS Model Exporter" width:209 height:254
 								temp_bone_array = #()
 								for b = 1 to numBones do
 								(
-									select geometry_objects[g]
-									max modify mode
-									subobjectLevel = 1
 									boneName = skinOps.getBoneName theSkin b 0
-									theNode = getNodeByName boneName exact:true ignoreCase:false
-									nodeNum = findItem node_array theNode
+									theNodesArray = getNodeByName boneName exact:true ignoreCase:false all:true
+									if theNodesArray.count > 1 then
+									(
+										messageBox "Warning: cannot distinguish between nodes with identical names in skin modifier." title:"BlueStreak Error"
+									)
+									nodeNum = findItem node_array theNodesArray[1]
 									if nodeNum == 0 then
 									(
 										messageBox ("Warning: bone " + boneName + " in skin modifier is not a node.") title:"BlueStreak Error"
@@ -593,13 +611,10 @@ rollout roll "JMS Model Exporter" width:209 height:254
 										
 					default_node0index = (geom_parent_index[g] - 1)
 					
-					face_verts = #()
-					face_matID = #()
-					face_SG = #()
-					face_tverts = #()
-					
+					regionsMissing = false
 					for f = 1 to geom_mesh_faces[g] do
 					(
+						if face_regionID[f] == undefined then (regionsMissing = true)
 						face_verts[f] = getFace tmesh f
 						face_matID[f] = getFaceMatID tmesh f
 						face_SG[f] = getFaceSmoothGroupB tmesh f
@@ -690,6 +705,23 @@ rollout roll "JMS Model Exporter" width:209 height:254
 						)
 						append face_shader_index ((findItem geom_materials geometry_objects[g].material[face_matID[f]]) - 1)
 					)
+					if regionsMissing then
+					(
+						regionIndex = findItem geom_regions "unnamed"
+						if regionIndex == 0 then
+						(
+							append geom_regions "unnamed"
+							regionIndex = geom_regions.count
+						)
+						for f = 1 to geom_mesh_faces[g] do
+						(
+							if face_regionID[f] == undefined then
+							(
+								face_regionID[f] = regionIndex - 1
+							)
+						)
+					)
+					for f = 1 to geom_mesh_faces[g] do (append face_region_index face_regionID[f])
 					max create mode
 					clearSelection()
 				)
@@ -739,7 +771,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 			
 			if validJMS == true then
 			(
-				ProgressStart "Exporting JMS Data"
+			
 				start1 = timeStamp()
 				
 				node_count = node_array.count
@@ -771,11 +803,15 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					format "%\t%\t%\n2.0\n" marker_translation[m].x marker_translation[m].y marker_translation[m].z to:jms
 				)
 				
+				region_count = geom_regions.count
+				format "%\n" region_count to:jms
+				for r = 1 to region_count do
+				(
+					format "%\n" geom_regions[r] to:jms
+				)
+				
 				numVerts = vert_pos.count
-				format "%\n%\n%\n" 1 "unnamed" numVerts to:jms
-				
-				totalCount = numVerts + numFaces
-				
+				format "%\n" numVerts to:jms
 				for v = 1 to numVerts do
 				(
 					format "%\n" vert_node0index[v] to:jms
@@ -785,7 +821,6 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					format "%\n" vert_node1weight[v] to:jms
 					format "%\n" tvert_pos[v].x to:jms
 					format "%\n0\n" tvert_pos[v].y to:jms
-					ProgressUpdate ((v as float / totalCount) * 100.0)
 				)
 				
 				format "%\n" numFaces to:jms
@@ -793,24 +828,22 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				c = 0
 				for n = 1 to numFaces do
 				(
-					format "0\n%\n" face_shader_index[n] to:jms
+					format "%\n" face_region_index[n] to:jms
+					format "%\n" face_shader_index[n] to:jms
 					format "%\t%\t%\n" c (c+1) (c+2) to:jms
 					c += 3
-					ProgressUpdate (((numVerts + n as float) / totalCount) * 100.0)
 				)
 				
 				end1 = timeStamp()
+				format ("JMS took % seconds to write.") ((end1 - start1) / 1000.0) to:listener
 				
 				if chk_jms.checked == true then
 				(
-					format ("JMS took % seconds to write.") ((end1 - start1) / 1000.0) to:listener
 					close jms
 				)
 				
-				ProgressEnd()
-				
-			)
-		)
+			) -- end check for valid export method
+		) -- end check for export failed
 		
 		if exportFailed == true then
 		(
@@ -821,8 +854,36 @@ rollout roll "JMS Model Exporter" width:209 height:254
 			)
 		)
 	)
+	on chk_jms changed theState do
+	(
+		if theState == true then
+		(
+			chk_stream.checked = false
+		)
+		else
+		(
+			chk_stream.checked = true
+		)
+	)
+	on chk_stream changed theState do
+	(
+		if theState == true then
+		(
+			chk_jms.checked = false
+		)
+		else
+		(
+			if chk_jms.enabled == true then
+			(
+				chk_jms.checked = true
+			)
+			else
+			(
+				chk_stream.checked = true
+			)
+		)
+	)
 )
-
 
 CreateDialog roll
 
