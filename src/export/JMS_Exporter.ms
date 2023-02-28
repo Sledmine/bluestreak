@@ -2,6 +2,7 @@
 --*				 		 JMS Exporter by TheGhost							*
 --*						 Edited by CtrlAltDestroy							*
 --*						 Edited by ChokingVictim							*
+--*						 Edited by bobbysoon								*
 --*					   for 3ds Max v5+ and gmax v1.2						*
 --***************************************************************************
 --*		Features:															*
@@ -780,52 +781,49 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				
 				node_count = node_array.count
 				
-				format "%\n%\n%\n" 8200 3251 node_count to:jms
+				--	Accellerate gMax export by reducing new-line character usage to minimum needed by tool
+				format "%\t%\t%\n" 8200 3251 node_count to:jms
 				for n = 1 to node_count do
 				(
-					format "%\n" node_array[n].name to:jms
-					format "%\n" (node_first_child_index[n] - 1) to:jms
-					format "%\n" (node_next_sibling_index[n] - 1) to:jms
-					format "%\t%\t%\t%\n" node_rotation[n].x node_rotation[n].y node_rotation[n].z node_rotation[n].w to:jms
+					format "%\t" node_array[n].name to:jms
+					format "%\t" (node_first_child_index[n] - 1) to:jms
+					format "%\t" (node_next_sibling_index[n] - 1) to:jms
+					format "%\t%\t%\t%\t" node_rotation[n].x node_rotation[n].y node_rotation[n].z node_rotation[n].w to:jms
 					format "%\t%\t%\n" node_translation[n].x node_translation[n].y node_translation[n].z to:jms
 				)
 				
 				mat_count = geom_materials.count
 				format "%\n" mat_count to:jms
 				for m = 1 to mat_count do
-				(
-					format "%\n%\n" geom_materials[m].name "<none>" to:jms
-				)
+					format "%\t%\n" geom_materials[m].name "<none>" to:jms
 				
 				marker_count = marker_array.count
 				format "%\n" marker_count to:jms
 				for m = 1 to marker_count do
 				(
-					format "%\n-1\n" (substring marker_array[m].name 2 -1) to:jms
-					format "%\n" (marker_parent_index[m] - 1) to:jms
-					format "%\t%\t%\t%\n" marker_rotation[m].x marker_rotation[m].y marker_rotation[m].z marker_rotation[m].w to:jms
-					format "%\t%\t%\n" marker_translation[m].x marker_translation[m].y marker_translation[m].z to:jms
-					format "%\n" marker_radius[m] to:jms
+					format "%\t-1\t" (substring marker_array[m].name 2 -1) to:jms
+					format "%\t" (marker_parent_index[m] - 1) to:jms
+					format "%\t%\t%\t%\t" marker_rotation[m].x marker_rotation[m].y marker_rotation[m].z marker_rotation[m].w to:jms
+					format "%\t%\t%\t" marker_translation[m].x marker_translation[m].y marker_translation[m].z to:jms
+					format "%\n" marker_radius[m] to:jms		--	radius working, courtesy of Choking Victem
 				)
 				
 				region_count = geom_regions.count
 				format "%\n" region_count to:jms
 				for r = 1 to region_count do
-				(
 					format "%\n" geom_regions[r] to:jms
-				)
 				
 				numVerts = vert_pos.count
 				format "%\n" numVerts to:jms
 				for v = 1 to numVerts do
 				(
-					format "%\n" vert_node0index[v] to:jms
-					format "%\t%\t%\n" vert_pos[v].x vert_pos[v].y vert_pos[v].z to:jms
-					format "%\t%\t%\n" vert_normal[v].x vert_normal[v].y vert_normal[v].z to:jms
-					format "%\n" vert_node1index[v] to:jms
-					format "%\n" vert_node1weight[v] to:jms
-					format "%\n" tvert_pos[v].x to:jms
-					format "%\n0\n" tvert_pos[v].y to:jms
+					format "%\t" vert_node0index[v] to:jms
+					format "%\t%\t%\t" vert_pos[v].x vert_pos[v].y vert_pos[v].z to:jms
+					format "%\t%\t%\t" vert_normal[v].x vert_normal[v].y vert_normal[v].z to:jms
+					format "%\t" vert_node1index[v] to:jms
+					format "%\t" vert_node1weight[v] to:jms
+					format "%\t" tvert_pos[v].x to:jms
+					format "%\t0\t" tvert_pos[v].y to:jms	--	w in uvw = 0?
 				)
 				
 				format "%\n" numFaces to:jms
@@ -833,8 +831,8 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				c = 0
 				for n = 1 to numFaces do
 				(
-					format "%\n" face_region_index[n] to:jms
-					format "%\n" face_shader_index[n] to:jms
+					format "%\t" face_region_index[n] to:jms
+					format "%\t" face_shader_index[n] to:jms
 					format "%\t%\t%\n" c (c+1) (c+2) to:jms
 					c += 3
 				)
