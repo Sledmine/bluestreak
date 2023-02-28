@@ -5,23 +5,21 @@
 --*						 Edited by bobbysoon								*
 --*					   for 3ds Max v5+ and gmax v1.2						*
 --***************************************************************************
---*		Features:															*
---*			- Exports all types of model geometry							*
---*			- Exports perfect texture coordinates							*
---*			- Exports regions												*
---*			- Exports proper, well-calculated vertex normals				*
---*			- Exports all nodes and markers (for weapons, vehicles, etc.)	*
---*			- Exports biped systems or bones for character models			*
---*			- Exports vertex weights for fully rigged model!				*
---*			- Exports from gmax / 3ds max version independent				*
+--*		Export Features:													*
+--*			- all types of model geometry									*
+--*			- perfect texture coordinates									*
+--*			- regions														*
+--*			- proper, well-calculated vertex normals						*
+--*			- all nodes and markers (for weapons, vehicles, etc.)			*
+--*			- biped systems or bones for character models					*
+--*			- vertex weights for fully rigged model!						*
+--*			- from gmax / 3ds max version independent						*
 --*-------------------------------------------------------------------------*
 --*	Instructions: Check the checkbox captioned "Export vertex weights" if	*
 --*	you are exporting a rigged model. Select the method to export the JMS	*
 --*	data, either writing to a JMS file or streaming through the listener	*
 --*	(for gmax). Click the "Export JMS Data" button to begin.				*
 --*-------------------------------------------------------------------------*
---*	Submit bugs to TheGhost on the Gearbox Software forums. Visit the		*
---*	forums for additional help at http://gbxforums.gearboxsoftware.com.		*
 --*	Visit the project site (http://ghost.halomaps.org/BlueStreak/) for more	*
 --* details on this and other projects.										*
 --*-------------------------------------------------------------------------*
@@ -35,6 +33,22 @@
 --*	the GNU General Public License for more details. A full copy of this	*
 --*	license is available at http://www.gnu.org/licenses/gpl.txt.			*
 --*-------------------------------------------------------------------------*
+
+grabListenerPath=getDir #scripts	--	or specify your own path, like "c:\\program files\\autodesk\\3ds max\\scripts"
+scriptFilePath=getDir #scripts
+
+aboutString = "Copyright (C) 2006 Adam Papamarcos\n"+ \
+		"\n"+ \
+		"Further contributions by:\n"+ \
+		"\tTheGhost (Adapted for HaloCE)\n"+ \
+		"\tCtrlAltDestroy (Regions support)\n"+ \
+		"\tChoking Victem (fixed exported Marker Radius)\n"+ \
+		"\tbobbysoon (gMax exports faster)"
+
+fn dlgAbout =
+(
+	messagebox aboutString title:"About JMS Exporter, as of version 1.0.4"
+)
 
 all_objects_array = #()
 all_object_names = #()
@@ -115,14 +129,22 @@ rollout roll "JMS Model Exporter" width:209 height:254
 	groupBox grp4 "Export Method" pos:[7,127] width:194 height:103
 	checkbox chk_jms "Save to JMS File  (3ds max only)" pos:[17,146] width:174 height:16 checked:true
 	checkbox chk_stream "Stream with MAXScript Listener" pos:[17,165] width:174 height:16
-	button go_button "Export JMS Data" pos:[38,188] width:128 height:31
+	button go_button "Export JMS Data" pos:[38,188] width:128 height:31	toolTip:"  Ready when you are  "
 	
-	label lbl7 "TheGhost/CtrlAltDestroy" pos:[8,235] width:150 height:14 enabled:false
-	label lbl8 "v1.0.3" pos:[167,236] width:32 height:14 enabled:false
+	button btAbout "About" pos:[8,235] width:150 height:14 across:2
+	button btEdit "v1.0.4" pos:[167,236] width:32 height:14	toolTip:"  NO!  "
 	
+	on btAbout pressed do dlgAbout()
+	
+	on btEdit pressed do showSource dlgAbout
+	
+	fn exists f = (1==(getFiles f).count)
 	on roll open do
 	(
 		ClearListener()
+		
+		btEdit.enabled=(exists scriptFilePath)
+		
 		if maxver[1] <= 4200 then
 		(
 			edt_info.text = "  Max version " + (maxver[1] / 1000.0) as string + " (gmax) detected."
@@ -504,14 +526,14 @@ rollout roll "JMS Model Exporter" width:209 height:254
 			for g = 1 to geometry_objects.count do
 			(
 				tmesh = snapshotAsMesh geometry_objects[g]
-				if classOf geometry_objects[g].material == Multimaterial then
+				if (classOf geometry_objects[g].material) == MultiMaterial then
 				(
 					for m = 1 to geometry_objects[g].material.count do
 					(
 						for f = 1 to getNumFaces tmesh do
 						(
 							matID = getFaceMatID tmesh f
-							if findItem geom_materials geometry_objects[g].material[matID] == 0 then
+							if (findItem geom_materials geometry_objects[g].material[matID]) == 0 then
 							(
 								append geom_materials geometry_objects[g].material[matID]
 							)
@@ -519,12 +541,13 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					)
 				)
 				else
-				(
-					if findItem geom_materials geometry_objects[g].material == 0 then
+					if (classOf geometry_objects[g].material) == StandardMaterial then
 					(
-						append geom_materials geometry_objects[g].material
+						if (findItem geom_materials geometry_objects[g].material) == 0 then
+						(
+							append geom_materials geometry_objects[g].material
+						)
 					)
-				)
 				
 				max modify mode
 				modPanel.setCurrentObject geometry_objects[g].baseObject
@@ -544,6 +567,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				(
 					numFaces += getNumFaces geometry_objects[g]
 				)
+				DisableSceneRedraw()
 				for g = 1 to geometry_objects.count do
 				(
 					clearSelection ()
@@ -579,9 +603,9 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					
 					if chk_weight.checked == true then
 					(
-						if geometry_objects[g].modifiers[#'skin'] != undefined then
+						theSkin = geometry_objects[g].modifiers[#'skin']
+						if theSkin != undefined then
 						(
-							theSkin = geometry_objects[g].modifiers[#'skin']
 							max modify mode
 							modPanel.setCurrentObject theSkin
 							subobjectLevel = 1
@@ -621,7 +645,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					(
 						if face_regionID[f] == undefined then (regionsMissing = true)
 						face_verts[f] = getFace tmesh f
-						face_matID[f] = getFaceMatID tmesh f
+						face_matID[f] = getFaceMatID tmesh f --!!--
 						face_SG[f] = getFaceSmoothGroupB tmesh f
 						if geom_object_has_tverts[g] == true do face_tverts[f] = getTVFace tmesh f
 						
@@ -730,10 +754,10 @@ rollout roll "JMS Model Exporter" width:209 height:254
 					max create mode
 					clearSelection()
 				)
+				enableSceneRedraw()
 				if boneAffectWarning == true then
-				(
 					messageBox "Warning: some vertices are weighted by more than two bones." title:"BlueStreak Error"
-				)
+				
 			)
 			else
 			(
@@ -751,20 +775,17 @@ rollout roll "JMS Model Exporter" width:209 height:254
 			
 			if chk_jms.checked == true then
 			(
-				output_name = getSaveFileName caption:"Select File to Export" \
-					filename: "C:\\Program Files\\Microsoft Games\\Halo Custom Edition\\data\\" \
-					types:"BlueStreak Model Exporter (*.jms)|*.jms|All Files (*.*)|*.*|"
+				output_name = undefined
+				validJMS = true
+				while (output_name == undefined) and (validJMS == true) do
+				(
+					output_name = getSaveFileName caption:"Select File to Export" \
+						filename: "C:\\Program Files\\Microsoft Games\\Halo Custom Edition\\data\\" \
+						types:"BlueStreak Model Exporter (*.jms)|*.jms|All Files (*.*)|*.*|"
 				
-				if output_name != undefined then 
-				(
-					jms = createfile output_name
-					validJMS = true
-				)
-				else
-				(
-					validJMS = false
-					messageBox "You did not create or select a JMS file to save to. Export failed." \
-						title: "JMS export terminated"
+					if output_name == undefined then 
+						if queryBox "" title:"Abort export?" then validJMS = false
+					
 				)
 			)
 			else
@@ -776,6 +797,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 			
 			if validJMS == true then
 			(
+				if chk_jms.checked == true then jms = createfile output_name
 			
 				start1 = timeStamp()
 				
@@ -838,54 +860,41 @@ rollout roll "JMS Model Exporter" width:209 height:254
 				)
 				
 				end1 = timeStamp()
-				format ("JMS took % seconds to write.") ((end1 - start1) / 1000.0) to:listener
 				
-				if chk_jms.checked == true then
-				(
+				if chk_jms.checked then
 					close jms
+				else
+				(
+					pushPrompt "Use the dialog window to launch GrabListener. Right click it, and select Open"
+					getOpenFilename		caption: "launch GrabListener" \
+										filename: (grabListenerPath + "\\grabListener.exe") \
+										types: "*.exe|*.exe"
+					popPrompt()
 				)
 				
 			) -- end check for valid export method
 		) -- end check for export failed
 		
-		if exportFailed == true then
+		if exportFailed then
 		(
 			messageBox "Export module failure" title:"Export"
 			for a = 1 to all_objects_array.count do
-			(
 				all_objects_array[a].name = all_object_names[a]
-			)
 		)
 	)
+	
 	on chk_jms changed theState do
-	(
-		if theState == true then
-		(
-			chk_stream.checked = false
-		)
-		else
-		(
-			chk_stream.checked = true
-		)
-	)
+		chk_stream.checked = not theState
+	
 	on chk_stream changed theState do
-	(
-		if theState == true then
-		(
+		if theState then
 			chk_jms.checked = false
-		)
 		else
-		(
-			if chk_jms.enabled == true then
-			(
+			if chk_jms.enabled then
 				chk_jms.checked = true
-			)
 			else
-			(
 				chk_stream.checked = true
-			)
-		)
-	)
+	
 )
 
 CreateDialog roll
