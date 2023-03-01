@@ -34,8 +34,10 @@
 --*	license is available at http://www.gnu.org/licenses/gpl.txt.			*
 --*-------------------------------------------------------------------------*
 
-grabListenerPath=getDir #scripts	--	or specify your own path, like "c:\\program files\\autodesk\\3ds max\\scripts"
-scriptFilePath=getDir #scripts
+-- Detect 3ds max or gmax
+gMax = (maxVersion())[1]<=4200
+grabListenerPath = getDir #scripts	--	or specify your own path, like "c:\\program files\\autodesk\\3ds max\\scripts"
+scriptFilePath = getDir #scripts
 
 aboutString = "Copyright (C) 2006 Adam Papamarcos\n"+ \
 		"\n"+ \
@@ -96,7 +98,8 @@ numFaces = 0
 boneAffectWarning = false
 validJMS = false
 
-maxver = maxVersion()
+v = maxVersion()
+maxVer = (v[1] / 1000.0) as string
 
 fn getFaceSmoothGroupB obj face =
 (
@@ -150,16 +153,16 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 		
 		btEdit.enabled=(exists scriptFilePath)
 		
-		if maxver[1] <= 4200 then
+		if gMax then
 		(
-			edt_info.text = "  Max version " + (maxver[1] / 1000.0) as string + " (gmax) detected."
+			edt_info.text = "  Max version " + maxVer + " (gmax) detected."
 			chk_jms.checked = false
 			chk_jms.enabled = false
 			chk_stream.checked = true
 		)
 		else
 		(
-			edt_info.text = "  3ds Max version " + (maxver[1] / 1000.0) as string + " detected."
+			edt_info.text = "  3ds Max version " + maxVer + " detected."
 			chk_jms.enabled = true
 			chk_jms.checked = true
 			chk_stream.checked = false
@@ -167,6 +170,8 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 	)
 	on go_button pressed do
 	(
+		start1= end1= 0 -- Restart benchmark timer
+		
 		all_objects_array = #()
 		all_object_names = #()
 		
