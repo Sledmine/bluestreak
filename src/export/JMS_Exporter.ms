@@ -115,7 +115,7 @@ fn getFaceSmoothGroupB obj face =
 	sg_bitarray as array
 )
 
-rollout roll "JMS Model Exporter" width:209 height:254
+rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 (
 	GroupBox grp1 "" pos:[7,0] width:194 height:32
 	label lbl_title "BlueStreak: Halo Model Exporter" pos:[26,12] width:159 height:13
@@ -139,7 +139,7 @@ rollout roll "JMS Model Exporter" width:209 height:254
 	on btEdit pressed do showSource dlgAbout
 	
 	fn exists f = (1==(getFiles f).count)
-	on roll open do
+	on roJmsExporter open do
 	(
 		ClearListener()
 		
@@ -897,6 +897,6 @@ rollout roll "JMS Model Exporter" width:209 height:254
 	
 )
 
-CreateDialog roll
+CreateDialog roJmsExporter
 
 -- End of Script --
