@@ -115,6 +115,11 @@ fn getFaceSmoothGroupB obj face =
 	sg_bitarray as array
 )
 
+-- Prevent multiple dialogs of the exporter from being opened
+if roJmsExporter != undefined then
+	if roJmsExporter.open then
+		destroyDialog roJmsExporter
+
 rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 (
 	GroupBox grp1 "" pos:[7,0] width:194 height:32
