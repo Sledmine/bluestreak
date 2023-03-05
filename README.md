@@ -11,3 +11,10 @@ used to store the scripts and their history, also to allow for collaboration and
 
 For more information on the scripts and their history, please refer to the [c20](https://c20.reclaimers.net/h1/tools/bluestreak/)
 docs page.
+
+# Want to contribute?
+If you have a script that you would like to contribute, please submit a pull request.
+
+
+Want to learn about MaxScript? Check out the [Learning MaxScript](https://help.autodesk.com/view/MAXDEV/2022/ENU/?guid=GUID-4C14F474-CD23-4001-93DF-0F0F9A6025C7) docs.
+
