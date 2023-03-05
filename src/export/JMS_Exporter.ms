@@ -1,43 +1,46 @@
---***************************************************************************
---*				 		 JMS Exporter by TheGhost							*
---*						 Edited by CtrlAltDestroy							*
---*						 Edited by ChokingVictim							*
---*						 Edited by bobbysoon								*
---*						 Edited by Sledmine								*
---*					   for 3ds Max v5+ and gmax v1.2						*
---***************************************************************************
---*		Export Features:													*
---*			- all types of model geometry									*
---*			- perfect texture coordinates									*
---*			- regions														*
---*			- proper, well-calculated vertex normals						*
---*			- all nodes and markers (for weapons, vehicles, etc.)			*
---*			- biped systems or bones for character models					*
---*			- vertex weights for fully rigged model!						*
---*			- from gmax / 3ds max version independent						*
---*-------------------------------------------------------------------------*
---*	Instructions: Check the checkbox captioned "Export vertex weights" if	*
---*	you are exporting a rigged model. Select the method to export the JMS	*
---*	data, either writing to a JMS file or streaming through the listener	*
---*	(for gmax). Click the "Export JMS Data" button to begin.				*
---*-------------------------------------------------------------------------*
---*	Visit the project site (http://ghost.halomaps.org/BlueStreak/) for more	*
---* details on this and other projects.										*
---*-------------------------------------------------------------------------*
---*	Copyright (C) 2006 Adam Papamarcos (mailto:papamarcos@gmail.com)		*
---*	This program is free software; you can redistribute it and/or modify it	*
---*	under the terms of the GNU General Public License as published by the	*
---*	Free Software Foundation; either version 2 of the License, or (at your	*
---*	option) any later version. This program is distributed in the hope that	*
---*	it will be useful, but WITHOUT ANY WARRANTY; without even the implied	*
---*	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See	*
---*	the GNU General Public License for more details. A full copy of this	*
---*	license is available at http://www.gnu.org/licenses/gpl.txt.			*
---*-------------------------------------------------------------------------*
+-- Halo Custom Edition JMS Exporter
+-- (for 3ds Max v5+ and gmax v1.2)
+-- Version 1.0.5
+-- Created by TheGhost
+-- Contributions by:
+-- 
+-- CtrlAltDestroy
+-- ChokingVictim
+-- bobbysoon
+-- Sledmine
+------------------------------------------------------------------------------------------------
+-- Export Features:
+-- - All types of model geometry
+-- - Perfect texture coordinates
+-- - Regions
+-- - Proper, well-calculated vertex normals
+-- - All nodes and markers (for weapons, vehicles, etc.)
+-- - Biped systems or bones for character models
+-- - Vertex weights for fully rigged model!
+-- - From gmax / 3ds max version independent
+------------------------------------------------------------------------------------------------
+-- Instructions: Check the checkbox captioned "Export vertex weights" if you
+-- are exporting a rigged model.
+-- Select the method to export the JMS data, either writing to a JMS file
+-- or streaming through the listener (for gmax).
+-- Click the "Export JMS Data" button to begin.
+------------------------------------------------------------------------------------------------
+-- Visit the project on GitHub (https://github.com/Sledmine/bluestreak)
+------------------------------------------------------------------------------------------------
+-- Copyright (C) 2006 Adam Papamarcos (mailto:papamarcos@gmail.com)
+-- This program is free software; you can redistribute it and/or modify it
+-- under the terms of the GNU General Public License as published by the
+-- Free Software Foundation; either version 2 of the License, or (at your
+-- option) any later version. This program is distributed in the hope that
+-- it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+-- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+-- the GNU General Public License for more details. A full copy of this
+-- license is available at http://www.gnu.org/licenses/gpl.txt.
+------------------------------------------------------------------------------------------------
 
 -- Detect 3ds max or gmax
 gMax = (maxVersion())[1]<=4200
-grabListenerPath = getDir #scripts	--	or specify your own path, like "c:\\program files\\autodesk\\3ds max\\scripts"
+grabListenerPath = getDir #scripts -- Or specify your own path, like "c:\\program files\\autodesk\\3ds max\\scripts"
 scriptFilePath = getDir #scripts
 
 aboutString = "Copyright (C) 2006 Adam Papamarcos\n"+ \
@@ -49,8 +52,7 @@ aboutString = "Copyright (C) 2006 Adam Papamarcos\n"+ \
 		"bobbysoon (gMax exports faster)\n" + \
 		"Sledmine (improvements, set checksum to 0 by default)"
 
-fn dlgAbout =
-(
+fn dlgAbout = (
 	messagebox aboutString title:"About JMS Exporter"
 )
 

@@ -1,12 +1,27 @@
 -- Halo Custom Edition Animation Exporter
 -- Version 1.0.0
--- Created by: ZTeam, CtrlAltDestroy
--- Edited by: Sledmine
--- # Features:
--- - Exports animations from 3ds Max to Halo Custom Edition
+-- Created by ZTeam, CtrlAltDestroy
+-- Contributions by:
+-- 
+-- Sledmine
+------------------------------------------------------------------------------------------------
+-- Features:
 -- - Supports all 3ds Max versions
 -- - Supports nodes with name prefixes "frame", "bip01", and "b_"
--- Script is free to modify for any purpose, as long as credit is given to the original authors.
+------------------------------------------------------------------------------------------------
+-- Free to modify for any purpose, as long as credit is given to the original authors.
+------------------------------------------------------------------------------------------------
+-- Visit the project on GitHub (https://github.com/Sledmine/bluestreak)
+------------------------------------------------------------------------------------------------
+-- This program is free software; you can redistribute it and/or modify it
+-- under the terms of the GNU General Public License as published by the
+-- Free Software Foundation; either version 2 of the License, or (at your
+-- option) any later version. This program is distributed in the hope that
+-- it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+-- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+-- the GNU General Public License for more details. A full copy of this
+-- license is available at http://www.gnu.org/licenses/gpl.txt.
+------------------------------------------------------------------------------------------------
 
 maxVer = undefined
 lastPath = "C:\\Program Files\\Microsoft Games\\Halo Custom Edition\\data\\"
