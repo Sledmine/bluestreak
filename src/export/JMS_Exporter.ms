@@ -145,18 +145,14 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 	button go_button "Export JMS Data" pos:[38,188] width:128 height:31	toolTip:"  Ready when you are  "
 	
 	button btAbout "About" pos:[8,235] width:150 height:14 across:2
-	button btEdit "v1.0.6" pos:[167,236] width:32 height:14	toolTip:"  NO!  "
+	label versionLbl "v1.0.6" pos:[167,236] width:32 height:14
 	
 	on btAbout pressed do dlgAbout()
-	
-	on btEdit pressed do showSource dlgAbout
 	
 	fn exists f = (1==(getFiles f).count)
 	on roJmsExporter open do
 	(
 		ClearListener()
-		
-		btEdit.enabled=(exists scriptFilePath)
 		
 		if gMax then
 		(

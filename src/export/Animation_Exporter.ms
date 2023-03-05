@@ -46,7 +46,7 @@ rollout animExport "Anim Exporter" width:150 height:125
 	radioButtons methodSelEx "" pos:[16,32] width:108 height:32 labels:#("Export to File") columns:1 visible:false
 	radioButtons methodSelSt "" pos:[16,47] width:108 height:32 labels:#("Stream to Listener") columns:1 visible:false
 	button exportAnim "Export Animation" pos:[7,77] width:136 height:25
-	label versionLbl "1.0.0" pos:[7,107] width:103 height:13 enabled:false
+	label versionLbl "v1.0.0" pos:[7,107] width:103 height:13
 	
 	fn calcNodeListChecksum =
 	(
