@@ -1,6 +1,6 @@
 -- Halo Custom Edition JMS Exporter
 -- (for 3ds Max v5+ and gmax v1.2)
--- Version 1.0.5
+-- Version 1.0.6
 -- Created by TheGhost
 -- Contributions by:
 -- 
@@ -15,6 +15,7 @@
 -- - Regions
 -- - Proper, well-calculated vertex normals
 -- - All nodes and markers (for weapons, vehicles, etc.)
+-- - Supports multiple node prefixes ("frame", "bip01" and "b_")
 -- - Biped systems or bones for character models
 -- - Vertex weights for fully rigged model!
 -- - From gmax / 3ds max version independent
@@ -144,7 +145,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 	button go_button "Export JMS Data" pos:[38,188] width:128 height:31	toolTip:"  Ready when you are  "
 	
 	button btAbout "About" pos:[8,235] width:150 height:14 across:2
-	button btEdit "v1.0.5" pos:[167,236] width:32 height:14	toolTip:"  NO!  "
+	button btEdit "v1.0.6" pos:[167,236] width:32 height:14	toolTip:"  NO!  "
 	
 	on btAbout pressed do dlgAbout()
 	
@@ -236,7 +237,8 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			if exportFailed != true then (
 				objName = all_objects_array[a].name
 				if (substring objName 1 5 as name == "frame" as name) or
-					(substring objName 1 5 as name == "bip01" as name) then (
+					(substring objName 1 5 as name == "bip01" as name) or 
+					(substring objName 1 2 as name == "b_" as name) then (
 					if (all_objects_array[a].parent == undefined) then (
 						if sceneParent != undefined then (
 							messagebox "There are too many actors in the scene! Can not export single model." title:"BlueStreak Error 1"
@@ -389,7 +391,8 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			for m = marker_array.count to 1 by -1 do (
 				nodeParent = marker_array[m].parent
 				while (substring nodeParent.name 1 5 as name != "frame" as name) and
-				(substring nodeParent.name 1 5 as name != "bip01" as name) do (
+				(substring nodeParent.name 1 5 as name != "bip01" as name) and
+				(substring nodeParent.name 1 2 as name != "b_" as name) do (
 					nodeParent = nodeParent.parent
 				)
 				parentIndex = findItem node_array nodeParent
@@ -402,7 +405,8 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			for g = geometry_objects.count to 1 by -1 do (
 				nodeParent = geometry_objects[g].parent
 				while (substring nodeParent.name 1 5 as name != "frame" as name) and
-				(substring nodeParent.name 1 5 as name != "bip01" as name) do (
+				(substring nodeParent.name 1 5 as name != "bip01" as name) and
+				(substring nodeParent.name 1 2 as name != "b_" as name) do (
 					nodeParent = nodeParent.parent
 				)
 				parentIndex = findItem node_array nodeParent
