@@ -811,11 +811,15 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			
 				start1 = timeStamp()
 				
-				node_count = node_array.count
-				
-				--	Accellerate gMax export by reducing new-line character usage to minimum needed by tool
-				format "%\t%\t%\n" 8200 3251 node_count to:jms
-				for n = 1 to node_count do
+				-- JMS header
+				-- This might be wrong, but it is consistent with other JMS files
+				jmsVersion = 8200
+				-- Checksum is left as 0 to bypass assert at compile time
+				jmsChecksum = 0
+				jmsNodeCount = node_array.count
+				-- NOTE: Use tabs instead of new lines when possible to speed up export in gmax
+				format "%\t%\t%\n" jmsVersion jmsChecksum jmsNodeCount to:jms
+				for n = 1 to jmsNodeCount do
 				(
 					format "%\t" node_array[n].name to:jms
 					format "%\t" (node_first_child_index[n] - 1) to:jms
