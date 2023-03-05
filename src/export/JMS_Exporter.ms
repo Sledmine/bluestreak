@@ -227,35 +227,25 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 		all_objects_array = selection as array
 		clearSelection()
 		objectsInScene = all_objects_array.count
-		for n = 1 to objectsInScene do
-		(
+		for n = 1 to objectsInScene do (
 			all_object_names[n] = all_objects_array[n].name
 		)
-		for a = 1 to objectsInScene do
-		(
-			if exportFailed != true then
-			(
+		for a = 1 to objectsInScene do (
+			if exportFailed != true then (
 				objName = all_objects_array[a].name
-				
-				if (substring objName 1 5 as name == "frame" as name) or (substring objName 1 5 as name == "bip01" as name) then
-				(
-					if (all_objects_array[a].parent == undefined) then
-					(
-						if sceneParent != undefined then
-						(
+				if (substring objName 1 5 as name == "frame" as name) or
+					(substring objName 1 5 as name == "bip01" as name) then (
+					if (all_objects_array[a].parent == undefined) then (
+						if sceneParent != undefined then (
 							messagebox "There are too many actors in the scene! Can not export single model." title:"BlueStreak Error 1"
 							exportFailed = true
-						)
-						else
-						(
+						) else (
 							sceneParent = all_objects_array[a]
 							append node_objects all_objects_array[a]
 							currCount = node_objects.count
 							node_objects[currCount].name = "01" + node_objects[currCount].name
 						)
-					)
-					else
-					(
+					) else (
 						testParent = all_objects_array[a].parent
 						i = 1
 						do (
@@ -264,53 +254,39 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 							testParent = testParent.parent
 						) while (testParent != undefined)
 						
-						if rootParent != sceneParent then
-						(
+						if rootParent != sceneParent then (
 							messagebox "There are too many actors in the scene!  Can not export single model." title:"BlueStreak Error 2"
 							exportFailed = true
-						)
-						else
-						(
+						) else (
 							append node_objects all_objects_array[a]
 							currCount = node_objects.count
-							if i < 10 then
-							(
+							if i < 10 then (
 								node_objects[currCount].name = "0" + i as string + node_objects[currCount].name
-							)
-							else
-							(
+							) else (
 								node_objects[currCount].name = i as string + node_objects[currCount].name
 							)
 						)
 					)
-				)
-				else
-				(
-					if all_objects_array[a].parent != undefined then
-					(
-						if objName[1] == "#" then
-						(
+				) else (
+					if all_objects_array[a].parent != undefined then (
+						if objName[1] == "#" then (
 							testParent = all_objects_array[a].parent
 							do (
 								rootParent = testParent
 								testParent = testParent.parent
 							) while testParent != undefined
 							
-							if rootParent == sceneParent then
-							(
+							if rootParent == sceneParent then (
 								append marker_array all_objects_array[a]
 							)
-						)
-						else
-						(
+						) else (
 							testParent = all_objects_array[a].parent
 							do (
 								rootParent = testParent
 								testParent = testParent.parent
 							) while testParent != undefined
 							
-							if rootParent == sceneParent then
-							(
+							if rootParent == sceneParent then (
 								append geometry_objects all_objects_array[a]
 							)
 						)
@@ -319,48 +295,32 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			)
 		)
 		
-		if exportFailed != true then
-		(
-			if node_objects.count == 0 then
-			(
+		if exportFailed != true then (
+			if node_objects.count == 0 then (
 				messageBox "There are no actors to export!" title:"BlueStreak Error 3"
 				exportFailed = true
-			)
-			else
-			(
-				if marker_array == undefined and geometry_objects == undefined then
-				(
+			) else (
+				if marker_array == undefined and geometry_objects == undefined then (
 					messageBox "There was no geometry to export." title:"BlueStreak Error 4"
 					exportFailed = true
 				)
 			)
 		)
 		
-		if exportFailed != true then
-		(
+		if exportFailed != true then (
 			-- Sort the nodes the way Halo likes it. The hierarchy level number was added to the beginning of each object's name. Then sort alphabetically.
-			for n = 1 to node_objects.count do
-			(
-				if node_array.count == 0 then
-				(
+			for n = 1 to node_objects.count do (
+				if node_array.count == 0 then (
 					node_array[n] = node_objects[n]
-				)
-				else
-				(
+				) else (
 					added = false
-					for c = 1 to node_array.count do
-					(
-						if added == false then
-						(
-							if node_objects[n].name as name < node_array[c].name as name then
-							(
+					for c = 1 to node_array.count do (
+						if added == false then (
+							if node_objects[n].name as name < node_array[c].name as name then (
 								insertItem node_objects[n] node_array c
 								added = true
-							)
-							else
-							(
-								if c == node_array.count then
-								(
+							) else (
+								if c == node_array.count then (
 									append node_array node_objects[n]
 								)
 							)
@@ -368,139 +328,100 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 					)
 				)
 			)
-			for n = 1 to node_array.count do
-			(
+			for n = 1 to node_array.count do (
 				node_array[n].name = substring node_array[n].name 3 -1
 			)
 			all_valid_nodes = true
 			deletedName = " "
-			for n = 2 to node_array.count do
-			(
-				if findItem node_array node_array[n].parent == 0 then
-				(
-					if all_valid_nodes == true then
-					(
+			for n = 2 to node_array.count do (
+				if findItem node_array node_array[n].parent == 0 then (
+					if all_valid_nodes == true then (
 						deletedName = node_array[n].name
 					)
 					node_array[n] = undefined
 					all_valid_nodes = false
 				)
 			)
-			if all_valid_nodes == false then
-			(
+			if all_valid_nodes == false then (
 				messageBox ("Can't add frame node \"" + deletedName + "\" because it is hung from a geometry or marker node.") title:"BlueStreak Error"
 			)
-			for n = node_array.count to 1 by -1 do
-			(
-				if node_array[n] == undefined then
-				(
+			for n = node_array.count to 1 by -1 do (
+				if node_array[n] == undefined then (
 					deleteItem node_array n
 				)
 			)
 			-- All parent, child, and sibling node arrays are 1-based. When outputting they will be converted to 0-based.
-			for n = 1 to node_array.count do
-			(
+			for n = 1 to node_array.count do (
 				temp_child_indices = #()
-				for c = 1 to node_array[n].children.count do
-				(
-					
+				for c = 1 to node_array[n].children.count do (
 					nodeChild = node_array[n].children[c]
-					if nodeChild != undefined then
-					(
+					if nodeChild != undefined then (
 						childIndex = findItem node_array nodeChild
-						if childIndex != 0 then
-						(
+						if childIndex != 0 then (
 							append temp_child_indices (childIndex)
 						)
 					)
 				)
 				node_child_indices[n] = temp_child_indices
-				if node_child_indices[n].count == 0 then
-				(
+				if node_child_indices[n].count == 0 then (
 					node_first_child_index[n] = 0
-				)
-				else
-				(
+				) else (
 					sort (node_child_indices[n])
 					node_first_child_index[n] = node_child_indices[n][1]
 				)
 			)
 			node_next_sibling_index[1] = 0
-			for s = 1 to node_child_indices.count do
-			(
-				if (node_child_indices[s].count < 2 and node_child_indices[s][1] != undefined) then
-				(
+			for s = 1 to node_child_indices.count do (
+				if (node_child_indices[s].count < 2 and node_child_indices[s][1] != undefined) then (
 					node_next_sibling_index[node_child_indices[s][1]] = 0
-				)
-				else
-				(
-					for g = 1 to node_child_indices[s].count do
-					(
-						if g == node_child_indices[s].count then
-						(
+				) else (
+					for g = 1 to node_child_indices[s].count do (
+						if g == node_child_indices[s].count then (
 							node_next_sibling_index[node_child_indices[s][g]] = 0
-						)
-						else
-						(
+						) else (
 							node_next_sibling_index[node_child_indices[s][g]] = node_child_indices[s][g+1]
 						)
 					)
 				)
 			)
-			for m = marker_array.count to 1 by -1 do
-			(
+			for m = marker_array.count to 1 by -1 do (
 				nodeParent = marker_array[m].parent
-				while (substring nodeParent.name 1 5 as name != "frame" as name) and (substring nodeParent.name 1 5 as name != "bip01" as name) do
-				(
+				while (substring nodeParent.name 1 5 as name != "frame" as name) and
+				(substring nodeParent.name 1 5 as name != "bip01" as name) do (
 					nodeParent = nodeParent.parent
 				)
 				parentIndex = findItem node_array nodeParent
-				if parentIndex == 0 then
-				(
+				if parentIndex == 0 then (
 					deleteItem marker_array m
-				)
-				else
-				(
+				) else (
 					marker_parent_index[m] = parentIndex
 				)
 			)
-			for g = geometry_objects.count to 1 by -1 do
-			(
+			for g = geometry_objects.count to 1 by -1 do (
 				nodeParent = geometry_objects[g].parent
-				while (substring nodeParent.name 1 5 as name != "frame" as name) and (substring nodeParent.name 1 5 as name != "bip01" as name) do
-				(
+				while (substring nodeParent.name 1 5 as name != "frame" as name) and
+				(substring nodeParent.name 1 5 as name != "bip01" as name) do (
 					nodeParent = nodeParent.parent
 				)
 				parentIndex = findItem node_array nodeParent
-				if parentIndex == 0 then
-				(
+				if parentIndex == 0 then (
 					deleteItem geometry_objects g
-				)
-				else
-				(
+				) else (
 					geom_parent_index[g] = parentIndex
 				)
 			)
-			for n = 1 to node_array.count do
-			(
-				if node_array[n].parent == undefined then
-				(
-					if classOf node_array[n] == Biped_Object then
-					(
+			for n = 1 to node_array.count do (
+				if node_array[n].parent == undefined then (
+					if classOf node_array[n] == Biped_Object then (
 						node_translation[n] = biped.getTransform node_array[n] #pos
 						node_rotation[n] = biped.getTransform node_array[n] #rotation
-					)
-					else
-					(
+					) else (
 						node_translation[n] = node_array[n].pos
 						in coordsys parent rot = normalize (node_array[n].rotation)
 						node_rotation[n] = (quat -rot.x -rot.y -rot.z rot.w)
 					)
-				)
-				else
-				(
-					if classOf node_array[n] == Biped_Object then
-					(
+				) else (
+					if classOf node_array[n] == Biped_Object then (
 						m = mesh vertices:#() faces:#()  --two temporary meshes that serve as placeholders for the
 						mp = mesh vertices:#() faces:#()  --biped bones since these methods can not be evoked on them
 						m.parent = mp
@@ -515,17 +436,14 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 						node_rotation[n] = normalize (quat -rot.x -rot.y -rot.z rot.w)
 						delete m
 						delete mp
-					)
-					else
-					(
+					) else (
 						in coordsys parent node_translation[n] = node_array[n].pos
 						in coordsys parent rot = node_array[n].rotation
 						node_rotation[n] = normalize (quat -rot.x -rot.y -rot.z rot.w)
 					)
 				)
 			)
-			for m = 1 to marker_array.count do
-			(
+			for m = 1 to marker_array.count do (
 				in coordsys parent marker_translation[m] = marker_array[m].pos
 				in coordsys parent rot = marker_array[m].rotation
 				marker_rotation[m] = normalize (quat -rot.x -rot.y -rot.z rot.w)
@@ -533,55 +451,42 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			)
 		)
 		
-		if exportFailed != true then
-		(
-			for g = 1 to geometry_objects.count do
-			(
+		if exportFailed != true then (
+			for g = 1 to geometry_objects.count do (
 				tmesh = snapshotAsMesh geometry_objects[g]
-				if (classOf geometry_objects[g].material) == MultiMaterial then
-				(
-					for m = 1 to geometry_objects[g].material.count do
-					(
-						for f = 1 to getNumFaces tmesh do
-						(
+				if (classOf geometry_objects[g].material) == MultiMaterial then (
+					for m = 1 to geometry_objects[g].material.count do (
+						for f = 1 to getNumFaces tmesh do (
 							matID = getFaceMatID tmesh f
-							if (findItem geom_materials geometry_objects[g].material[matID]) == 0 then
-							(
+							if (findItem geom_materials geometry_objects[g].material[matID]) == 0 then (
 								append geom_materials geometry_objects[g].material[matID]
 							)
 						)
 					)
 				)
 				else
-					if (classOf geometry_objects[g].material) == StandardMaterial then
-					(
-						if (findItem geom_materials geometry_objects[g].material) == 0 then
-						(
+					if (classOf geometry_objects[g].material) == StandardMaterial then (
+						if (findItem geom_materials geometry_objects[g].material) == 0 then (
 							append geom_materials geometry_objects[g].material
 						)
 					)
 				
 				max modify mode
 				modPanel.setCurrentObject geometry_objects[g].baseObject
-				for r = 1 to geometry_objects[g].faces.selSetNames.count do
-				(
-					if findItem geom_regions geometry_objects[g].faces.selSetNames[r] == 0 then
-					(
+				for r = 1 to geometry_objects[g].faces.selSetNames.count do (
+					if findItem geom_regions geometry_objects[g].faces.selSetNames[r] == 0 then (
 						append geom_regions geometry_objects[g].faces.selSetNames[r]
 					)
 				)
 			)
 			
-			if geometry_objects.count != 0 then
-			(
+			if geometry_objects.count != 0 then (
 				v = 0
-				for g = 1 to geometry_objects.count do
-				(
+				for g = 1 to geometry_objects.count do (
 					numFaces += getNumFaces geometry_objects[g]
 				)
 				DisableSceneRedraw()
-				for g = 1 to geometry_objects.count do
-				(
+				for g = 1 to geometry_objects.count do (
 					clearSelection ()
 					select geometry_objects[g]
 					if geometry_objects[g].modifiers[#'turn to mesh'] == undefined then (addModifier geometry_objects[g] (turn_to_mesh ()))
@@ -597,15 +502,11 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 					
 					max modify mode
 					modPanel.setCurrentObject geometry_objects[g].baseObject
-					for r = 1 to geom_regions.count do
-					(
-						try
-						(
-							for f = 1 to geometry_objects[g].faces[geom_regions[r]].count do
-							(
+					for r = 1 to geom_regions.count do (
+						try (
+							for f = 1 to geometry_objects[g].faces[geom_regions[r]].count do (
 								faceIndex = geometry_objects[g].faces[geom_regions[r]][f].index
-								if face_regionID[faceIndex] == undefined then
-								(
+								if face_regionID[faceIndex] == undefined then (
 									face_regionID[faceIndex] = r - 1
 								)
 							)
@@ -613,35 +514,28 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 						catch ()
 					)
 					
-					if chk_weight.checked == true then
-					(
+					if chk_weight.checked == true then (
 						theSkin = geometry_objects[g].modifiers[#'skin']
-						if theSkin != undefined then
-						(
+						if theSkin != undefined then (
 							max modify mode
 							modPanel.setCurrentObject theSkin
 							subobjectLevel = 1
 							numBones = skinOps.getNumberBones theSkin
-							if numBones > 1 then
-							(
+							if numBones > 1 then (
 								geom_object_has_skin[g] = true
 								temp_bone_array = #()
-								for b = 1 to numBones do
-								(
+								for b = 1 to numBones do (
 									boneName = skinOps.getBoneName theSkin b 0
 									theNodesArray = getNodeByName boneName exact:true ignoreCase:false all:true
-									if theNodesArray.count > 1 then
-									(
+									if theNodesArray.count > 1 then (
 										messageBox "Warning: cannot distinguish between nodes with identical names in skin modifier." title:"BlueStreak Error"
 									)
 									nodeNum = findItem node_array theNodesArray[1]
-									if nodeNum == 0 then
-									(
+									if nodeNum == 0 then (
 										messageBox ("Warning: bone " + boneName + " in skin modifier is not a node.") title:"BlueStreak Error"
 										append temp_bone_array 1
 									)
-									else
-									(
+									else (
 										append temp_bone_array nodeNum
 									)
 								)
@@ -653,56 +547,45 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 					default_node0index = (geom_parent_index[g] - 1)
 					
 					regionsMissing = false
-					for f = 1 to geom_mesh_faces[g] do
-					(
+					for f = 1 to geom_mesh_faces[g] do (
 						if face_regionID[f] == undefined then (regionsMissing = true)
 						face_verts[f] = getFace tmesh f
 						face_matID[f] = getFaceMatID tmesh f --!!--
 						face_SG[f] = getFaceSmoothGroupB tmesh f
 						if geom_object_has_tverts[g] == true do face_tverts[f] = getTVFace tmesh f
 						
-						for vertices = 1 to 3 do
-						(
+						for vertices = 1 to 3 do (
 							v += 1
 							
 							vert_pos[v] = getVert tmesh face_verts[f][vertices]
 							
-							if geom_object_has_skin[g] == true then
-							(
+							if geom_object_has_skin[g] == true then (
 								skinNode0 = skinOps.getVertexWeightBoneID theSkin face_verts[f][vertices] 1
 								weightedNode0Index = geom_bone_array[g][skinNode0] - 1
 								vert_node0index[v] = weightedNode0Index
 								
 								boneAffectNum = skinOps.getVertexWeightCount theSkin face_verts[f][vertices]
 								if boneAffectNum > 2 do boneAffectWarning = true
-								if boneAffectNum == 1 then
-								(
+								if boneAffectNum == 1 then (
 									if boneAffectNum > 2 do boneAffectWarning = true
 									vert_node1index[v] = -1
 									vert_node1weight[v] = 0
-								)
-								else
-								(
+								) else (
 									skinNode1 = skinOps.GetVertexWeightBoneID theSkin face_verts[f][vertices] 2
 									weightedNode1Index = geom_bone_array[g][skinNode1] - 1
 									weightedNode1Weight = skinOps.GetVertexWeight theSkin face_verts[f][vertices] 2
-									if weightedNode1Weight > 0.5 then
-									(
+									if weightedNode1Weight > 0.5 then (
 										vert_node0index[v] = weightedNode1Index
 										vert_node1index[v] = weightedNode0Index
 										vert_node1weight[v] = (1.0 - weightedNode1Weight)
 										
-									)
-									else
-									(
+									) else (
 										vert_node0index[v] = weightedNode0Index
 										vert_node1index[v] = weightedNode1Index
 										vert_node1weight[v] = weightedNode1Weight
 									)
 								)
-							)
-							else
-							(
+							) else (
 								vert_node0index[v] = default_node0index
 								vert_node1index[v] = -1
 								vert_node1weight[v] = 0
@@ -713,51 +596,39 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 							simFaces = meshop.getFacesUsingVert tmesh face_verts[f][vertices] as array
 							del_index = findItem simFaces f
 							deleteItem simFaces del_index
-							for s = 1 to simFaces.count do
-							(
+							for s = 1 to simFaces.count do (
 								affectNormal = false
 								neiSG = getFaceSmoothGroupB tmesh simFaces[s]
-								for aN = 1 to face_SG[f].count do
-								(
-									if affectNormal == false then
-									(
-										if findItem neiSG face_SG[f][aN] != 0 then
-										(
+								for aN = 1 to face_SG[f].count do (
+									if affectNormal == false then (
+										if findItem neiSG face_SG[f][aN] != 0 then (
 											affectNormal = true
 										)
 									)
 								)
 								
-								if affectNormal == true then
-								(
+								if affectNormal == true then (
 									vNormal += getFaceNormal tmesh simFaces[s]
 								)
 							)
 							vert_normal[v] = normalize(vNormal)
 							
-							if geom_object_has_tverts[g] == true then
-							(
+							if geom_object_has_tverts[g] == true then (
 								tvert_pos[v] = getTVert tmesh face_tverts[f][vertices]
-							)
-							else
-							(
+							) else (
 								tvert_pos[v] = [0,0,0]
 							)
 						)
 						append face_shader_index ((findItem geom_materials geometry_objects[g].material[face_matID[f]]) - 1)
 					)
-					if regionsMissing then
-					(
+					if regionsMissing then (
 						regionIndex = findItem geom_regions "unnamed"
-						if regionIndex == 0 then
-						(
+						if regionIndex == 0 then (
 							append geom_regions "unnamed"
 							regionIndex = geom_regions.count
 						)
-						for f = 1 to geom_mesh_faces[g] do
-						(
-							if face_regionID[f] == undefined then
-							(
+						for f = 1 to geom_mesh_faces[g] do (
+							if face_regionID[f] == undefined then (
 								face_regionID[f] = regionIndex - 1
 							)
 						)
@@ -767,30 +638,20 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 					clearSelection()
 				)
 				enableSceneRedraw()
-				if boneAffectWarning == true then
+				if boneAffectWarning == true then (
 					messageBox "Warning: some vertices are weighted by more than two bones." title:"BlueStreak Error"
-				
-			)
-			else
-			(
+				)
+			) else (
 				messageBox "Warning: there was no geometry to export." title:"BlueStreak Error"
 			)
 		)
-		
-		
-	
-		
-		if exportFailed != true then
-		(
-		
+
+		if exportFailed != true then (
 			-- Print the JMS file to JMS or the MAXScript Listener --
-			
-			if chk_jms.checked == true then
-			(
+			if chk_jms.checked == true then (
 				output_name = undefined
 				validJMS = true
-				while (output_name == undefined) and (validJMS == true) do
-				(
+				while (output_name == undefined) and (validJMS == true) do (
 					output_name = getSaveFileName caption:"Select File to Export" \
 						filename: "C:\\Program Files\\Microsoft Games\\Halo Custom Edition\\data\\" \
 						types:"BlueStreak Model Exporter (*.jms)|*.jms|All Files (*.*)|*.*|"
@@ -799,16 +660,13 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 						if queryBox "" title:"Abort export?" then validJMS = false
 					
 				)
-			)
-			else
-			(
+			) else (
 				ClearListener()
 				jms = listener
 				validJMS = true
 			)
 			
-			if validJMS == true then
-			(
+			if validJMS == true then (
 				if chk_jms.checked == true then jms = createfile output_name
 			
 				start1 = timeStamp()
@@ -821,8 +679,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				jmsNodeCount = node_array.count
 				-- NOTE: Use tabs instead of new lines when possible to speed up export in gmax
 				format "%\t%\t%\n" jmsVersion jmsChecksum jmsNodeCount to:jms
-				for n = 1 to jmsNodeCount do
-				(
+				for n = 1 to jmsNodeCount do (
 					format "%\t" node_array[n].name to:jms
 					format "%\t" (node_first_child_index[n] - 1) to:jms
 					format "%\t" (node_next_sibling_index[n] - 1) to:jms
@@ -832,13 +689,13 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				
 				mat_count = geom_materials.count
 				format "%\n" mat_count to:jms
-				for m = 1 to mat_count do
+				for m = 1 to mat_count do (
 					format "%\t%\n" geom_materials[m].name "<none>" to:jms
+				)
 				
 				marker_count = marker_array.count
 				format "%\n" marker_count to:jms
-				for m = 1 to marker_count do
-				(
+				for m = 1 to marker_count do (
 					format "%\t-1\t" (substring marker_array[m].name 2 -1) to:jms
 					format "%\t" (marker_parent_index[m] - 1) to:jms
 					format "%\t%\t%\t%\t" marker_rotation[m].x marker_rotation[m].y marker_rotation[m].z marker_rotation[m].w to:jms
@@ -848,13 +705,13 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				
 				region_count = geom_regions.count
 				format "%\n" region_count to:jms
-				for r = 1 to region_count do
+				for r = 1 to region_count do (
 					format "%\n" geom_regions[r] to:jms
+				)
 				
 				numVerts = vert_pos.count
 				format "%\n" numVerts to:jms
-				for v = 1 to numVerts do
-				(
+				for v = 1 to numVerts do (
 					format "%\t" vert_node0index[v] to:jms
 					format "%\t%\t%\t" vert_pos[v].x vert_pos[v].y vert_pos[v].z to:jms
 					format "%\t%\t%\t" vert_normal[v].x vert_normal[v].y vert_normal[v].z to:jms
@@ -867,8 +724,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				format "%\n" numFaces to:jms
 				
 				c = 0
-				for n = 1 to numFaces do
-				(
+				for n = 1 to numFaces do (
 					format "%\t" face_region_index[n] to:jms
 					format "%\t" face_shader_index[n] to:jms
 					format "%\t%\t%\n" c (c+1) (c+2) to:jms
@@ -877,10 +733,9 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				
 				end1 = timeStamp()
 				
-				if chk_jms.checked then
+				if chk_jms.checked then (
 					close jms
-				else
-				(
+				) else (
 					pushPrompt "Use the dialog window to launch GrabListener. Right click it, and select Open"
 					getOpenFilename		caption: "launch GrabListener" \
 										filename: (grabListenerPath + "\\grabListener.exe") \
@@ -891,28 +746,28 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			) -- end check for valid export method
 		) -- end check for export failed
 		
-		if exportFailed then
-		(
+		if exportFailed then (
 			messageBox "Export module failure" title:"Export"
-			for a = 1 to all_objects_array.count do
+			for a = 1 to all_objects_array.count do (
 				all_objects_array[a].name = all_object_names[a]
+			)
 		)
 	)
 	
-	on chk_jms changed theState do
+	on chk_jms changed theState do (
 		chk_stream.checked = not theState
-	
-	on chk_stream changed theState do
-		if theState then
+	)
+	on chk_stream changed theState do (
+		if theState then (
 			chk_jms.checked = false
-		else
-			if chk_jms.enabled then
+		) else (
+			if chk_jms.enabled then (
 				chk_jms.checked = true
-			else
+			) else (
 				chk_stream.checked = true
-	
+			)
+		)
+	)
 )
 
 CreateDialog roJmsExporter
-
--- End of Script --
