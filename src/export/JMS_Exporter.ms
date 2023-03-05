@@ -3,6 +3,7 @@
 --*						 Edited by CtrlAltDestroy							*
 --*						 Edited by ChokingVictim							*
 --*						 Edited by bobbysoon								*
+--*						 Edited by Sledmine								*
 --*					   for 3ds Max v5+ and gmax v1.2						*
 --***************************************************************************
 --*		Export Features:													*
@@ -41,15 +42,16 @@ scriptFilePath = getDir #scripts
 
 aboutString = "Copyright (C) 2006 Adam Papamarcos\n"+ \
 		"\n"+ \
-		"Further contributions by:\n"+ \
-		"\tTheGhost (Adapted for HaloCE)\n"+ \
-		"\tCtrlAltDestroy (Regions support)\n"+ \
-		"\tChoking Victem (fixed exported Marker Radius)\n"+ \
-		"\tbobbysoon (gMax exports faster)"
+		"Contributions by:\n\n"+ \
+		"TheGhost (adapted for HaloCE)\n"+ \
+		"CtrlAltDestroy (regions support)\n"+ \
+		"ChokingVictim (fixed exported Marker Radius)\n"+ \
+		"bobbysoon (gMax exports faster)\n" + \
+		"Sledmine (improvements, set checksum to 0 by default)"
 
 fn dlgAbout =
 (
-	messagebox aboutString title:"About JMS Exporter, as of version 1.0.4"
+	messagebox aboutString title:"About JMS Exporter"
 )
 
 all_objects_array = #()
@@ -140,7 +142,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 	button go_button "Export JMS Data" pos:[38,188] width:128 height:31	toolTip:"  Ready when you are  "
 	
 	button btAbout "About" pos:[8,235] width:150 height:14 across:2
-	button btEdit "v1.0.4" pos:[167,236] width:32 height:14	toolTip:"  NO!  "
+	button btEdit "v1.0.5" pos:[167,236] width:32 height:14	toolTip:"  NO!  "
 	
 	on btAbout pressed do dlgAbout()
 	
