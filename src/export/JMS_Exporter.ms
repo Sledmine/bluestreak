@@ -57,6 +57,35 @@ fn dlgAbout = (
 	messagebox aboutString title:"About JMS Exporter"
 )
 
+fn timeString ts =	--	ts == timeStamp
+(
+	et= ts/1000	--	et= seconds
+	
+	m=(floor (et/60)) as integer
+	if m>0 then
+	(
+		ms=(m as string) + " minute"
+		if m>1 then ms=ms+"s"
+	)
+	else
+		ms=""
+	
+	s=(floor (et-(m*60))) as integer
+	if s>0 then
+	(
+		ss=(s as string) + " second"
+		if s>1 then ss=ss+"s"
+	)
+	et=""
+	if m>0 then et=et+ms
+	if m>0 and s>0 then et=et+", "
+	if s>0 then et=et+ss
+	
+	if m==0 and s==0 then et="instantaneous"
+	
+	return et
+)
+
 all_objects_array = #()
 all_object_names = #()
 
@@ -105,6 +134,95 @@ validJMS = false
 
 v = maxVersion()
 maxVer = (v[1] / 1000.0) as string
+
+--Structure containing the tool
+struct ProgressBarTool
+(
+	/********************************************************
+	Variables
+	********************************************************/
+	instUI = undefined,
+	message = "",
+	count = 0,
+	value = 0,
+	
+	/********************************************************
+	Functions
+	********************************************************/
+	fn SetProgress value:0 count:0 message:"" =
+	(		
+		ProgressBarTool.count = count
+		ProgressBarTool.value = value
+		ProgressBarTool.message = message
+
+		--Update the UI
+		if instUI != undefined do 
+		(
+			instUI.UpdateProgress()
+		)
+	),
+	
+	/********************************************************
+	Rollouts
+	********************************************************/
+	fn UI =
+	(
+		rollout ProgressBarToolRO "Progress..."
+		(
+			dotnetcontrol uiMessage "Label" width:(ProgressBarToolRO.width-28) align:#center offset:[0,5]
+			progressbar uiProgressBar color:(color 20 150 240) width:(ProgressBarToolRO.width-28) height:12  align:#center
+			dotnetcontrol uiIterations "Label" width:(ProgressBarToolRO.width-28) align:#center
+			button uiOk "OK" width:100 align:#right enabled:false
+						
+			fn StyleLabel ctrl:undefined align:#left =
+			(	
+				colMax = (colorMan.getColor #background)*255
+				colorClass = dotNetClass "system.drawing.color"
+				ctrl.Font = dotNetObject "System.Drawing.Font" "Verdana" 11 (dotNetClass "System.Drawing.FontStyle").Regular (dotNetClass "System.Drawing.GraphicsUnit").Pixel
+				ctrl.Backcolor = colMax = colorClass.fromArgb colMax[1] colMax[2] colMax[3]
+				ctrl.Forecolor = ctrl.Forecolor.fromARGB 240 240 240
+				ctrl.TextAlign = ctrl.TextAlign.TopLeft
+			)
+
+			fn UpdateProgress =
+			(
+				uiMessage.text = ProgressBarTool.message
+				uiProgressBar.value = 100.0 * ProgressBarTool.value / ProgressBarTool.count as float
+				uiIterations.text = ProgressBarTool.value as string + "/" + ProgressBarTool.count as string
+				windows.processPostedMessages()
+
+				uiOk.enabled = ProgressBarTool.value == ProgressBarTool.count
+			)
+			
+			on uiOk pressed do
+			(
+				try(destroyDialog ::ProgressBarToolRO)catch()
+			)
+			
+			on ProgressBarToolRO open do
+			(
+				StyleLabel ctrl:uiMessage
+				StyleLabel ctrl:uiIterations
+			)
+		)
+	),
+	
+	fn run=
+	(
+		if instUI==undefined then
+		(
+			instUI=UI()
+			createDialog instUI width:500 style:#(#style_titlebar, #style_border)
+		)else
+		(
+			destroyDialog instUI
+			instUI=undefined
+		)
+	),
+
+	fn getRollouts = #(ui())
+)
+
 
 fn getFaceSmoothGroupB obj face =
 (
@@ -171,6 +289,14 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 	)
 	on go_button pressed do
 	(
+		try (
+			destroyDialog ProgressBarTool.instUI
+			ProgressBarTool.instUI = undefined
+		)
+		catch()
+		ProgressBarTool = ProgressBarTool()
+		ProgressBarTool.run()
+
 		start1= end1= 0 -- Restart benchmark timer
 		
 		all_objects_array = #()
@@ -550,6 +676,10 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 					
 					regionsMissing = false
 					for f = 1 to geom_mesh_faces[g] do (
+						objName = geometry_objects[g].name
+						--ProgressBarTool.SetProgress value:f count:geom_mesh_faces[g] message:("Processing faces of \"" + (objName as string) + "\", object " + (g as string) + " of " + (geometry_objects.count as string) + "...")
+						ProgressBarTool.SetProgress value:f count:geom_mesh_faces[g] message:("Processing faces of \"" + (objName as string) + "\", " + ((geometry_objects.count - g) as string) + " objects left...")
+
 						if face_regionID[f] == undefined then (regionsMissing = true)
 						face_verts[f] = getFace tmesh f
 						face_matID[f] = getFaceMatID tmesh f --!!--
@@ -669,7 +799,9 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 			)
 			
 			if validJMS == true then (
-				if chk_jms.checked == true then jms = createfile output_name
+				if chk_jms.checked == true then (
+					jms = createfile output_name mode:"wtc"
+				)
 			
 				start1 = timeStamp()
 				
@@ -734,6 +866,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				)
 				
 				end1 = timeStamp()
+				messageBox ((end1-start1) as string) title:"Export time:"
 				
 				if chk_jms.checked then (
 					close jms
