@@ -81,7 +81,7 @@ rollout animExport "Anim Exporter" width:150 height:125
 		
 		try
 		(
-			nodeArray = (($'b_*' as array) + ($'bip01*' as array) + ($'frame*' as array))
+			nodeArray = (($'bip01*' as array) + ($'b_*' as array) + ($'frame*' as array))--this is the actual initial sort order the next sort func takes, This order is evaluated as hierarchy for some reason
 			nodeArray = for i in nodeArray where (not i.isHidden) collect i
 			for w = 1 to nodeArray.count do
 			(
