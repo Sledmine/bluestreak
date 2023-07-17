@@ -4,6 +4,7 @@
 -- Contributions by:
 -- 
 -- Sledmine
+-- Mata
 ------------------------------------------------------------------------------------------------
 -- Features:
 -- - Supports all 3ds Max versions
@@ -80,16 +81,17 @@ rollout animExport "Anim Exporter" width:150 height:125
 		
 		try
 		(
-			nodeArray = (($'frame*' as array) + ($'bip01*' as array) + ($'b_*' as array))
+			nodeArray = (($'bip01*' as array) + ($'b_*' as array) + ($'frame*' as array))--this is the actual initial sort order the next sort func takes, This order is evaluated as hierarchy for some reason
 			nodeArray = for i in nodeArray where (not i.isHidden) collect i
 			for w = 1 to nodeArray.count do
 			(
 				if (nodeArray[w].parent != undefined) then
 				(
-					if (((substring nodeArray[w].parent.name 1 5 as name) != ("frame" as name)) and
+					if (((substring nodeArray[w].parent.name 1 2 as name) != ("b_" as name)) and
 					((substring nodeArray[w].parent.name 1 5 as name) != ("bip01" as name)) and
-					((substring nodeArray[w].parent.name 1 2 as name) != ("b_" as name))) then (
+					((substring nodeArray[w].parent.name 1 5 as name) != ("frame" as name))) then (
 						failed = true
+						print "nodes have wrong names"
 						exit
 					)
 				)
@@ -103,6 +105,7 @@ rollout animExport "Anim Exporter" width:150 height:125
 						if (rootSceneNode != undefined) then
 						(
 							failed = true
+							print "nodes have wrong hierarchy"
 							exit
 						)
 						else
@@ -126,6 +129,7 @@ rollout animExport "Anim Exporter" width:150 height:125
 						if (tempRootSceneNode != rootSceneNode) then
 						(
 							failed = true
+							print "root node doesnt match with hierarchy parent"
 							exit
 						)
 						else
@@ -183,9 +187,9 @@ rollout animExport "Anim Exporter" width:150 height:125
 			(
 				for i in nodeArray do
 				(
-					if (((substring i.name 1 5 as name) != ("frame" as name)) and
+					if (((substring i.name 1 2 as name) != ("b_" as name)) and
 					((substring i.name 1 5 as name) != ("bip01" as name)) and
-					((substring i.name 1 2 as name) != ("b_" as name))) then (
+					((substring i.name 1 5 as name) != ("frame" as name))) then (
 						i.name = (substring i.name 3 -1)
 					)
 					nodeNames = #()
