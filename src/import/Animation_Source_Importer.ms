@@ -1,13 +1,13 @@
 -- Halo Custom Edition Anatimation Source Importer
 -- (for 3ds Max v5+ and gmax v1.2)
--- Version 1.0.0
+-- Version 1.0.1
 -- Created by LaikaGlove
 -- Contributions by:
 --
 -- Sledmine
 ------------------------------------------------------------------------------------------------
 -- Features:
--- - Import animations from any source model animation file.
+-- - Import animations from any source model animation file
 ------------------------------------------------------------------------------------------------
 --	Instructions: Click the "Load File" button and navigate to the
 --	desired Animation source file. Select from the import options and press the
@@ -146,7 +146,7 @@ fn readQuaternionValue =
 	j = values[2] as float
 	k = values[3] as float
 	w = values[4] as float
-	
+
 	normalize (quat i j k w)
 )
 
@@ -166,23 +166,21 @@ fn firstIndexOf array value =
 	result
 )
 
-rollout roll "Animation Source Importer" width:408 height:153
+rollout roll "Animation Source Importer" width:408 height:164
 (
-	GroupBox 'grp_load' "Load File" pos:[8,8] width:392 height:77 align:#left
-	button 'load_button' "Load File" pos:[77,22] width:122 height:29 align:#left
-	button 'unload_button' "Unload File" pos:[211,22] width:127 height:29 enabled:false align:#left
-	label 'lbl_animation' "Animation:" pos:[19,61] width:55 height:16 enabled:false align:#left
-	edittext 'edt_animation' "" pos:[74,59] width:313 height:16 enabled:false align:#left
+	GroupBox grp_load "File" pos:[8,8] width:392 height:77 align:#left
+	button load_button "Load File" pos:[77,22] width:122 height:29 align:#left
+	button unload_button "Unload File" pos:[211,22] width:127 height:29 enabled:false align:#left
+	label lbl_animation "Animation:" pos:[19,61] width:55 height:16 align:#left
+	edittext edt_animation "" pos:[74,59] width:313 height:16 align:#left
 	
-	GroupBox 'grp_import' "Import Button" pos:[8,89] width:392 height:54 enabled:false align:#left
-	button 'import_button' "Import Animation" pos:[144,104] width:141 height:29 enabled:false align:#left
-	label 'lbl_by' "Script by LaikaGlove" pos:[16,124] width:105 height:15 enabled:false align:#left
-	label 'lbl_version' "v1.0.0" pos:[357,124] width:37 height:15 enabled:false align:#left
+	GroupBox grp_import "Import Button" pos:[8,89] width:392 height:54 align:#left
+	button import_button "Import Animation" pos:[144,104] width:141 height:29 align:#left
+	label lbl_version "v1.0.0" pos:[357,146] width:37 height:15 align:#left
 	
 	on roll open do
 	(
 		ClearListener()
-		format "-- Animation Importer v1 by LaikaGlove --\n"
 		format "Using max version: %\n" (maxver[1] / 1000.0)
 	)
 	on roll close do
@@ -204,7 +202,7 @@ rollout roll "Animation Source Importer" width:408 height:153
 	on load_button pressed do
 	(
 		in_name = getOpenFileName \
-			caption: "Select Animation File" \
+			caption: "Select Halo Animation File" \
 			types: "JMA File (*.jma)|*.jma|JMM File (*.jmm)|*.jmm|JMO File (*.jmo)|*.jmo|JMR File (*.jmr)|*.jmr|JMT File (*.jmt)|*.jmt|JMW File (*.jmw)|*.jmw|JMZ File (*.jmz)|*.jmz|All Files (*.*)|*.*"
 		
 		if in_name != undefined then
