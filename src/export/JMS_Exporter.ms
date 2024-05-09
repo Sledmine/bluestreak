@@ -1,6 +1,6 @@
 -- Halo Custom Edition JMS Exporter
 -- (for 3ds Max v5+ and gmax v1.2)
--- Version 1.0.6
+-- Version 1.1.0
 -- Created by TheGhost
 -- Contributions by:
 -- 
@@ -106,6 +106,11 @@ validJMS = false
 v = maxVersion()
 maxVer = (v[1] / 1000.0) as string
 
+noRootNodesMessage = "There is no root node to export.\nMake sure root node name starts with a prefix from this list:\n\n \"frame\"\n\"bip01\"\n\"b_\""
+noGeometryMessage = "There is no geometry to export.\nMake sure geometry is linked to a root node."
+tooManyRootNodesMessage = "There are too many root nodes in the scene! Only one root node is allowed."
+verticesWeightWarning = "WARNING: Some vertices are affected by more than 2 bones. This is not supported in Halo Custom Edition."
+
 fn getFaceSmoothGroupB obj face =
 (
 	local sgroup_val = getFaceSmoothGroup obj face
@@ -128,24 +133,26 @@ if roJmsExporter != undefined then
 	if roJmsExporter.open then
 		destroyDialog roJmsExporter
 
-rollout roJmsExporter "JMS Model Exporter" width:209 height:254
+rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 (
-	GroupBox grp1 "" pos:[7,0] width:194 height:32
-	label lbl_title "BlueStreak: Halo Model Exporter" pos:[26,12] width:159 height:13
+	GroupBox grp2 "User Information" pos:[8, 8] width:193 height:40
+	Label edt_info "" pos:[13, grp2.pos.y + 17] width:176 height:18
 	
-	GroupBox grp2 "User Information" pos:[8,37] width:193 height:40
-	edittext edt_info "" pos:[13,53] width:176 height:18 enabled:false
+	-- TODO Remove hardcoded values and use a list of options to iterate over
+	local exportOptionsCount = 2
+	GroupBox grp3 "Export options" pos:[7, edt_info.pos.y + 30] width:194 height:(exportOptionsCount * 30)
+	CheckBox checkBoxWeights "Export vertex weights (rigged)" pos:[17, grp3.pos.y + 17] width:173 height:16 checked:true
+	CheckBox checkBoxTurnToMesh "Add Turn to Mesh modifier" pos:[17, grp3.pos.y + 36] width:173 height:16 checked:false
 	
-	GroupBox grp3 "Export options" pos:[7,82] width:194 height:40
-	checkbox chk_weight "Export vertex weights (rigged)" pos:[17,100] width:173 height:16 checked:true
+	local exportMethodCount = 2
+	GroupBox grp4 "Export Method" pos:[7, grp3.height + grp3.pos.y + 5] width:194 height:(exportMethodCount * 30)
+	-- TODO Change this to a radio button group
+	CheckBox chk_jms "Save to JMS File" pos:[17, grp4.pos.y + 17] width:174 height:16 checked:true
+	CheckBox chk_stream "Stream with MAXScript Listener" pos:[17, grp4.pos.y + 36] width:174 height:16 checked:false
+	Button go_button "Export JMS Data" pos:[7, grp4.height + grp4.pos.y + 5] width:194 height:32 toolTip:"Ready when you are"
 	
-	groupBox grp4 "Export Method" pos:[7,127] width:194 height:103
-	checkbox chk_jms "Save to JMS File  (3ds max only)" pos:[17,146] width:174 height:16 checked:true
-	checkbox chk_stream "Stream with MAXScript Listener" pos:[17,165] width:174 height:16
-	button go_button "Export JMS Data" pos:[38,188] width:128 height:31	toolTip:"  Ready when you are  "
-	
-	button btAbout "About" pos:[8,235] width:150 height:14 across:2
-	label versionLbl "v1.0.6" pos:[167,236] width:32 height:14
+	Button btAbout "About" pos:[8, 225] width:150 height:20 across:2
+	Label versionLbl "v1.1.0" pos:[167, btAbout.pos.y + 2] width:32 height:20
 	
 	on btAbout pressed do dlgAbout()
 	
@@ -237,8 +244,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 					(substring objName 1 2 as name == "b_" as name) then (
 					if (all_objects_array[a].parent == undefined) then (
 						if sceneParent != undefined then (
-							messagebox "There are too many actors in the scene! Can not export single model." title:"BlueStreak Error 1"
-							exportFailed = true
+							return messageBox tooManyRootNodesMessage title:"BlueStreak Error: 3"
 						) else (
 							sceneParent = all_objects_array[a]
 							append node_objects all_objects_array[a]
@@ -255,8 +261,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 						) while (testParent != undefined)
 						
 						if rootParent != sceneParent then (
-							messagebox "There are too many actors in the scene!  Can not export single model." title:"BlueStreak Error 2"
-							exportFailed = true
+							return messageBox ("Root node \"" + all_objects_array[a].name + "\" is not a child of the scene root node.") title:"BlueStreak Error: 4"
 						) else (
 							append node_objects all_objects_array[a]
 							currCount = node_objects.count
@@ -297,12 +302,10 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 		
 		if exportFailed != true then (
 			if node_objects.count == 0 then (
-				messageBox "There are no actors to export!" title:"BlueStreak Error 3"
-				exportFailed = true
+				return messageBox noRootNodesMessage title:"BlueStreak Error: 1"
 			) else (
 				if marker_array == undefined and geometry_objects == undefined then (
-					messageBox "There was no geometry to export." title:"BlueStreak Error 4"
-					exportFailed = true
+					return messageBox noGeometryMessage title:"BlueStreak Error: 2"
 				)
 			)
 		)
@@ -343,7 +346,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				)
 			)
 			if all_valid_nodes == false then (
-				messageBox ("Can't add frame node \"" + deletedName + "\" because it is hung from a geometry or marker node.") title:"BlueStreak Error"
+				messageBox ("Can't add frame node \"" + deletedName + "\" because it is hung from a geometry or marker node.") title:"BlueStreak Error: 5"
 			)
 			for n = node_array.count to 1 by -1 do (
 				if node_array[n] == undefined then (
@@ -461,7 +464,11 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 						for f = 1 to getNumFaces tmesh do (
 							matID = getFaceMatID tmesh f
 							if (findItem geom_materials geometry_objects[g].material[matID]) == 0 then (
-								append geom_materials geometry_objects[g].material[matID]
+								if geometry_objects[g].material[matID] == undefined then (
+									return messageBox ("Material with ID " + matID as string + " is undefined. Please assign a material to the object.") title:"BlueStreak Error: 6"
+								) else (
+									append geom_materials geometry_objects[g].material[matID]
+								)
 							)
 						)
 					)
@@ -475,176 +482,194 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				
 				max modify mode
 				modPanel.setCurrentObject geometry_objects[g].baseObject
-				for r = 1 to geometry_objects[g].faces.selSetNames.count do (
-					if findItem geom_regions geometry_objects[g].faces.selSetNames[r] == 0 then (
-						append geom_regions geometry_objects[g].faces.selSetNames[r]
+				if (checkBoxTurnToMesh.checked == true) then (
+					if geometry_objects[g].modifiers[#'turn to mesh'] == undefined then (
+						addModifier geometry_objects[g] (turn_to_mesh ())
+					)
+				) else (
+					-- Validate object type
+					-- Check if object is an editable mesh or poly
+					local meshClass = classOf geometry_objects[g].baseObject as string
+					if meshClass != "Editable_mesh" and meshClass != "Editable_Poly" then (
+						print (meshClass + " is not an editable mesh or poly.")
+						return messageBox ("Object " + geometry_objects[g].name + " is not an editable mesh or poly.") title:"BlueStreak Error: 7"
+					)
+					for r = 1 to geometry_objects[g].faces.selSetNames.count do (
+						if findItem geom_regions geometry_objects[g].faces.selSetNames[r] == 0 then (
+							append geom_regions geometry_objects[g].faces.selSetNames[r]
+						)
 					)
 				)
 			)
-			
-			if geometry_objects.count != 0 then (
-				v = 0
-				for g = 1 to geometry_objects.count do (
-					numFaces += getNumFaces geometry_objects[g]
-				)
-				DisableSceneRedraw()
-				for g = 1 to geometry_objects.count do (
-					clearSelection ()
-					select geometry_objects[g]
-					if geometry_objects[g].modifiers[#'turn to mesh'] == undefined then (addModifier geometry_objects[g] (turn_to_mesh ()))
-					tmesh = snapshotAsMesh geometry_objects[g]
-					geom_mesh_faces[g] = getNumFaces tmesh
-					if getNumTVerts tmesh > 0 do geom_object_has_tverts[g] = true
-					
-					face_verts = #()
-					face_matID = #()
-					face_regionID = #()
-					face_SG = #()
-					face_tverts = #()
-					
-					max modify mode
-					modPanel.setCurrentObject geometry_objects[g].baseObject
-					for r = 1 to geom_regions.count do (
-						try (
-							for f = 1 to geometry_objects[g].faces[geom_regions[r]].count do (
-								faceIndex = geometry_objects[g].faces[geom_regions[r]][f].index
-								if face_regionID[faceIndex] == undefined then (
-									face_regionID[faceIndex] = r - 1
-								)
-							)
-						)
-						catch ()
+			try (
+				disableSceneRedraw()
+				if geometry_objects.count != 0 then (
+					v = 0
+					for g = 1 to geometry_objects.count do (
+						numFaces += getNumFaces geometry_objects[g]
 					)
-					
-					if chk_weight.checked == true then (
-						theSkin = geometry_objects[g].modifiers[#'skin']
-						if theSkin != undefined then (
-							max modify mode
-							modPanel.setCurrentObject theSkin
-							subobjectLevel = 1
-							numBones = skinOps.getNumberBones theSkin
-							if numBones > 1 then (
-								geom_object_has_skin[g] = true
-								temp_bone_array = #()
-								for b = 1 to numBones do (
-									boneName = skinOps.getBoneName theSkin b 0
-									theNodesArray = getNodeByName boneName exact:true ignoreCase:false all:true
-									if theNodesArray.count > 1 then (
-										messageBox "Warning: cannot distinguish between nodes with identical names in skin modifier." title:"BlueStreak Error"
-									)
-									nodeNum = findItem node_array theNodesArray[1]
-									if nodeNum == 0 then (
-										messageBox ("Warning: bone " + boneName + " in skin modifier is not a node.") title:"BlueStreak Error"
-										append temp_bone_array 1
-									)
-									else (
-										append temp_bone_array nodeNum
-									)
-								)
-								geom_bone_array[g] = temp_bone_array
-							)
-						)
-					)
-										
-					default_node0index = (geom_parent_index[g] - 1)
-					
-					regionsMissing = false
-					for f = 1 to geom_mesh_faces[g] do (
-						if face_regionID[f] == undefined then (regionsMissing = true)
-						face_verts[f] = getFace tmesh f
-						face_matID[f] = getFaceMatID tmesh f --!!--
-						face_SG[f] = getFaceSmoothGroupB tmesh f
-						if geom_object_has_tverts[g] == true do face_tverts[f] = getTVFace tmesh f
+					for g = 1 to geometry_objects.count do (
+						clearSelection ()
+						select geometry_objects[g]
+						tmesh = snapshotAsMesh geometry_objects[g]
+						geom_mesh_faces[g] = getNumFaces tmesh
+						if getNumTVerts tmesh > 0 do geom_object_has_tverts[g] = true
 						
-						for vertices = 1 to 3 do (
-							v += 1
-							
-							vert_pos[v] = getVert tmesh face_verts[f][vertices]
-							
-							if geom_object_has_skin[g] == true then (
-								skinNode0 = skinOps.getVertexWeightBoneID theSkin face_verts[f][vertices] 1
-								weightedNode0Index = geom_bone_array[g][skinNode0] - 1
-								vert_node0index[v] = weightedNode0Index
-								
-								boneAffectNum = skinOps.getVertexWeightCount theSkin face_verts[f][vertices]
-								if boneAffectNum > 2 do boneAffectWarning = true
-								if boneAffectNum == 1 then (
-									if boneAffectNum > 2 do boneAffectWarning = true
-									vert_node1index[v] = -1
-									vert_node1weight[v] = 0
-								) else (
-									skinNode1 = skinOps.GetVertexWeightBoneID theSkin face_verts[f][vertices] 2
-									weightedNode1Index = geom_bone_array[g][skinNode1] - 1
-									weightedNode1Weight = skinOps.GetVertexWeight theSkin face_verts[f][vertices] 2
-									if weightedNode1Weight > 0.5 then (
-										vert_node0index[v] = weightedNode1Index
-										vert_node1index[v] = weightedNode0Index
-										vert_node1weight[v] = (1.0 - weightedNode1Weight)
-										
-									) else (
-										vert_node0index[v] = weightedNode0Index
-										vert_node1index[v] = weightedNode1Index
-										vert_node1weight[v] = weightedNode1Weight
+						face_verts = #()
+						face_matID = #()
+						face_regionID = #()
+						face_SG = #()
+						face_tverts = #()
+						
+						max modify mode
+						modPanel.setCurrentObject geometry_objects[g].baseObject
+						for r = 1 to geom_regions.count do (
+							try (
+								for f = 1 to geometry_objects[g].faces[geom_regions[r]].count do (
+									faceIndex = geometry_objects[g].faces[geom_regions[r]][f].index
+									if face_regionID[faceIndex] == undefined then (
+										face_regionID[faceIndex] = r - 1
 									)
 								)
-							) else (
-								vert_node0index[v] = default_node0index
-								vert_node1index[v] = -1
-								vert_node1weight[v] = 0
 							)
-							
-							vNormal = [0,0,0]
-							vNormal += getFaceNormal tmesh f
-							simFaces = meshop.getFacesUsingVert tmesh face_verts[f][vertices] as array
-							del_index = findItem simFaces f
-							deleteItem simFaces del_index
-							for s = 1 to simFaces.count do (
-								affectNormal = false
-								neiSG = getFaceSmoothGroupB tmesh simFaces[s]
-								for aN = 1 to face_SG[f].count do (
-									if affectNormal == false then (
-										if findItem neiSG face_SG[f][aN] != 0 then (
-											affectNormal = true
+							catch ()
+						)
+						
+						if checkBoxWeights.checked == true then (
+							theSkin = geometry_objects[g].modifiers[#'skin']
+							if theSkin != undefined then (
+								max modify mode
+								modPanel.setCurrentObject theSkin
+								subobjectLevel = 1
+								numBones = skinOps.getNumberBones theSkin
+								if numBones > 1 then (
+									geom_object_has_skin[g] = true
+									temp_bone_array = #()
+									for b = 1 to numBones do (
+										boneName = skinOps.getBoneName theSkin b 0
+										theNodesArray = getNodeByName boneName exact:true ignoreCase:false all:true
+										if theNodesArray.count > 1 then (
+											messageBox "WARNING: Cannot distinguish between nodes with identical names in skin modifier." title:"BlueStreak Error: 8"
+										)
+										nodeNum = findItem node_array theNodesArray[1]
+										if nodeNum == 0 then (
+											messageBox ("WARNING: Bone " + boneName + " in skin modifier is not a node.") title:"BlueStreak Error: 9"
+											append temp_bone_array 1
+										)
+										else (
+											append temp_bone_array nodeNum
 										)
 									)
+									geom_bone_array[g] = temp_bone_array
+								)
+							)
+						)
+											
+						default_node0index = (geom_parent_index[g] - 1)
+						
+						regionsMissing = false
+						for f = 1 to geom_mesh_faces[g] do (
+							if face_regionID[f] == undefined then (regionsMissing = true)
+							face_verts[f] = getFace tmesh f
+							face_matID[f] = getFaceMatID tmesh f --!!--
+							face_SG[f] = getFaceSmoothGroupB tmesh f
+							if geom_object_has_tverts[g] == true do face_tverts[f] = getTVFace tmesh f
+							
+							for vertices = 1 to 3 do (
+								v += 1
+								
+								vert_pos[v] = getVert tmesh face_verts[f][vertices]
+								
+								if geom_object_has_skin[g] == true then (
+									skinNode0 = skinOps.getVertexWeightBoneID theSkin face_verts[f][vertices] 1
+									weightedNode0Index = geom_bone_array[g][skinNode0] - 1
+									vert_node0index[v] = weightedNode0Index
+									
+									boneAffectNum = skinOps.getVertexWeightCount theSkin face_verts[f][vertices]
+									if boneAffectNum > 2 do boneAffectWarning = true
+									if boneAffectNum == 1 then (
+										if boneAffectNum > 2 do boneAffectWarning = true
+										vert_node1index[v] = -1
+										vert_node1weight[v] = 0
+									) else (
+										skinNode1 = skinOps.GetVertexWeightBoneID theSkin face_verts[f][vertices] 2
+										weightedNode1Index = geom_bone_array[g][skinNode1] - 1
+										weightedNode1Weight = skinOps.GetVertexWeight theSkin face_verts[f][vertices] 2
+										if weightedNode1Weight > 0.5 then (
+											vert_node0index[v] = weightedNode1Index
+											vert_node1index[v] = weightedNode0Index
+											vert_node1weight[v] = (1.0 - weightedNode1Weight)
+											
+										) else (
+											vert_node0index[v] = weightedNode0Index
+											vert_node1index[v] = weightedNode1Index
+											vert_node1weight[v] = weightedNode1Weight
+										)
+									)
+								) else (
+									vert_node0index[v] = default_node0index
+									vert_node1index[v] = -1
+									vert_node1weight[v] = 0
 								)
 								
-								if affectNormal == true then (
-									vNormal += getFaceNormal tmesh simFaces[s]
+								vNormal = [0,0,0]
+								vNormal += getFaceNormal tmesh f
+								simFaces = meshop.getFacesUsingVert tmesh face_verts[f][vertices] as array
+								del_index = findItem simFaces f
+								deleteItem simFaces del_index
+								for s = 1 to simFaces.count do (
+									affectNormal = false
+									neiSG = getFaceSmoothGroupB tmesh simFaces[s]
+									for aN = 1 to face_SG[f].count do (
+										if affectNormal == false then (
+											if findItem neiSG face_SG[f][aN] != 0 then (
+												affectNormal = true
+											)
+										)
+									)
+									
+									if affectNormal == true then (
+										vNormal += getFaceNormal tmesh simFaces[s]
+									)
+								)
+								vert_normal[v] = normalize(vNormal)
+								
+								if geom_object_has_tverts[g] == true then (
+									tvert_pos[v] = getTVert tmesh face_tverts[f][vertices]
+								) else (
+									tvert_pos[v] = [0,0,0]
 								)
 							)
-							vert_normal[v] = normalize(vNormal)
-							
-							if geom_object_has_tverts[g] == true then (
-								tvert_pos[v] = getTVert tmesh face_tverts[f][vertices]
-							) else (
-								tvert_pos[v] = [0,0,0]
+							append face_shader_index ((findItem geom_materials geometry_objects[g].material[face_matID[f]]) - 1)
+						)
+						if regionsMissing then (
+							regionIndex = findItem geom_regions "unnamed"
+							if regionIndex == 0 then (
+								append geom_regions "unnamed"
+								regionIndex = geom_regions.count
+							)
+							for f = 1 to geom_mesh_faces[g] do (
+								if face_regionID[f] == undefined then (
+									face_regionID[f] = regionIndex - 1
+								)
 							)
 						)
-						append face_shader_index ((findItem geom_materials geometry_objects[g].material[face_matID[f]]) - 1)
+						for f = 1 to geom_mesh_faces[g] do (append face_region_index face_regionID[f])
+						max create mode
+						clearSelection()
 					)
-					if regionsMissing then (
-						regionIndex = findItem geom_regions "unnamed"
-						if regionIndex == 0 then (
-							append geom_regions "unnamed"
-							regionIndex = geom_regions.count
-						)
-						for f = 1 to geom_mesh_faces[g] do (
-							if face_regionID[f] == undefined then (
-								face_regionID[f] = regionIndex - 1
-							)
-						)
+					enableSceneRedraw()
+					if boneAffectWarning == true then (
+						messageBox verticesWeightWarning title:"BlueStreak Warning: 10"
 					)
-					for f = 1 to geom_mesh_faces[g] do (append face_region_index face_regionID[f])
-					max create mode
-					clearSelection()
+				) else (
+					return messageBox noGeometryMessage title:"BlueStreak Error: 2"
 				)
+			) catch (
+				print("An error occurred during the export process, enabling scene redraw...")
 				enableSceneRedraw()
-				if boneAffectWarning == true then (
-					messageBox "Warning: some vertices are weighted by more than two bones." title:"BlueStreak Error"
-				)
-			) else (
-				messageBox "Warning: there was no geometry to export." title:"BlueStreak Error"
+				--print("Error: " + getErrorString())
+				throw()
 			)
 		)
 
@@ -654,13 +679,14 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				output_name = undefined
 				validJMS = true
 				while (output_name == undefined) and (validJMS == true) do (
-					output_name = getSaveFileName caption:"Select File to Export" \
-						filename: "C:\\Program Files\\Microsoft Games\\Halo Custom Edition\\data\\" \
+					output_name = getSaveFileName caption:"Save Halo Model File" \
 						types:"BlueStreak Model Exporter (*.jms)|*.jms|All Files (*.*)|*.*|"
 				
 					if output_name == undefined then 
-						if queryBox "" title:"Abort export?" then validJMS = false
-					
+						if queryBox "Abort export?" title:"BlueStreak Exporter" then (
+							validJMS = false
+							exportFailed = true
+						)
 				)
 			) else (
 				ClearListener()
@@ -740,6 +766,8 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:254
 				if chk_jms.checked then (
 					close jms
 				) else (
+					-- TODO This does not seem to do anything important today
+					-- We might replace it with just print statements to the listener for debugging
 					pushPrompt "Use the dialog window to launch GrabListener. Right click it, and select Open"
 					getOpenFilename		caption: "launch GrabListener" \
 										filename: (grabListenerPath + "\\grabListener.exe") \
