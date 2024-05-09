@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 # JMS Exporter
-## [1.0.7] - 2024-05-08
+## [1.1.0] - 2024-05-08
 ### Fixed
 - Better error messages for the user, no root node, too many root nodes, no geometry, etc
 - Error messages not cancelling the export process
