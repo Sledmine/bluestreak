@@ -1,6 +1,6 @@
 -- Halo Custom Edition JMS Exporter
 -- (for 3ds Max v5+ and gmax v1.2)
--- Version 1.1.0
+-- Version 1.1.1
 -- Created by TheGhost
 -- Contributions by:
 -- 
@@ -152,7 +152,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 	Button go_button "Export JMS Data" pos:[7, grp4.height + grp4.pos.y + 5] width:194 height:32 toolTip:"Ready when you are"
 	
 	Button btAbout "About" pos:[8, 225] width:150 height:20 across:2
-	Label versionLbl "v1.1.0" pos:[167, btAbout.pos.y + 2] width:32 height:20
+	Label versionLbl "v1.1.1" pos:[167, btAbout.pos.y + 2] width:32 height:20
 	
 	on btAbout pressed do dlgAbout()
 	
@@ -346,7 +346,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 				)
 			)
 			if all_valid_nodes == false then (
-				messageBox ("Can't add frame node \"" + deletedName + "\" because it is hung from a geometry or marker node.") title:"BlueStreak Error: 5"
+				return messageBox ("Node \"" + deletedName + "\" is linked to an object that is not a node.") title:"BlueStreak Error: 5"
 			)
 			for n = node_array.count to 1 by -1 do (
 				if node_array[n] == undefined then (
@@ -465,7 +465,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 							matID = getFaceMatID tmesh f
 							if (findItem geom_materials geometry_objects[g].material[matID]) == 0 then (
 								if geometry_objects[g].material[matID] == undefined then (
-									return messageBox ("Material with ID " + matID as string + " is undefined. Please assign a material to the object.") title:"BlueStreak Error: 6"
+									return messageBox ("Material with ID " + matID as string + " does not exist in multimaterial. Please assign a valid ID to the object.") title:"BlueStreak Error: 6"
 								) else (
 									append geom_materials geometry_objects[g].material[matID]
 								)
@@ -549,10 +549,12 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 										boneName = skinOps.getBoneName theSkin b 0
 										theNodesArray = getNodeByName boneName exact:true ignoreCase:false all:true
 										if theNodesArray.count > 1 then (
+											-- TODO Check if we should threat this as an error
 											messageBox "WARNING: Cannot distinguish between nodes with identical names in skin modifier." title:"BlueStreak Error: 8"
 										)
 										nodeNum = findItem node_array theNodesArray[1]
 										if nodeNum == 0 then (
+											-- TODO Check if we should threat this as an error
 											messageBox ("WARNING: Bone " + boneName + " in skin modifier is not a node.") title:"BlueStreak Error: 9"
 											append temp_bone_array 1
 										)
@@ -660,9 +662,11 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 					)
 					enableSceneRedraw()
 					if boneAffectWarning == true then (
-						messageBox verticesWeightWarning title:"BlueStreak Warning: 10"
+						return messageBox verticesWeightWarning title:"BlueStreak Warning: 10"
 					)
 				) else (
+					-- TODO Look for a better way to restore scene redraw in every case
+					enableSceneRedraw()
 					return messageBox noGeometryMessage title:"BlueStreak Error: 2"
 				)
 			) catch (
