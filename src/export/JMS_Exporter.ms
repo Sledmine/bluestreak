@@ -140,7 +140,7 @@ rollout roJmsExporter "JMS Model Exporter" width:209 height:255
 	
 	-- TODO Remove hardcoded values and use a list of options to iterate over
 	local exportOptionsCount = 2
-	GroupBox grp3 "Export options" pos:[7, edt_info.pos.y + 30] width:194 height:(exportOptionsCount * 30)
+	GroupBox grp3 "Export Options" pos:[7, edt_info.pos.y + 30] width:194 height:(exportOptionsCount * 30)
 	CheckBox checkBoxWeights "Export vertex weights (rigged)" pos:[17, grp3.pos.y + 17] width:173 height:16 checked:true
 	CheckBox checkBoxTurnToMesh "Add Turn to Mesh modifier" pos:[17, grp3.pos.y + 36] width:173 height:16 checked:false
 	
