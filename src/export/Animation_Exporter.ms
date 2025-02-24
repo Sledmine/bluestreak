@@ -1,5 +1,5 @@
 -- Halo Custom Edition Animation Exporter
--- Version 1.0.0
+-- Version 1.1.0
 -- Created by ZTeam, CtrlAltDestroy
 -- Contributions by:
 -- 
@@ -9,6 +9,7 @@
 -- Features:
 -- - Supports all 3ds Max versions
 -- - Supports nodes with name prefixes "frame", "bip01", and "b_"
+-- - Exports node checksum as 0 or calculated value
 ------------------------------------------------------------------------------------------------
 -- Free to modify for any purpose, as long as credit is given to the original authors.
 ------------------------------------------------------------------------------------------------
@@ -25,7 +26,6 @@
 ------------------------------------------------------------------------------------------------
 
 maxVer = undefined
-lastPath = "C:\\Program Files\\Microsoft Games\\Halo Custom Edition\\data\\"
 outputPath = undefined
 outputFile = undefined
 
@@ -39,15 +39,21 @@ nodeFirstChildIndices = #()
 nodeNextSiblingIndices = #()
 rootSceneNode = undefined
 
-rollout animExport "Anim Exporter" width:150 height:125
+rollout animExport "Animation Exporter" width:180 height:160
 (
-	groupBox groupMethod "Max Version: " pos:[7,2] width:136 height:68
-	label methodLbl "Method" pos:[16,17] width:37 height:13
-	radioButtons methodSel "" pos:[16,32] width:108 height:32 labels:#("Export to File", "Stream to Listener") columns:1 visible:true
-	radioButtons methodSelEx "" pos:[16,32] width:108 height:32 labels:#("Export to File") columns:1 visible:false
-	radioButtons methodSelSt "" pos:[16,47] width:108 height:32 labels:#("Stream to Listener") columns:1 visible:false
-	button exportAnim "Export Animation" pos:[7,77] width:136 height:25
-	label versionLbl "v1.0.0" pos:[7,107] width:103 height:13
+	local exportMethodOptions = #("Export to File", "Stream to Listener")
+	groupBox groupMethod "Export Method" pos:[7, 8] width:166 height:(exportMethodOptions.count * 30)
+	-- TODO Implement proper radio button selection instead of using two different radio buttons
+	radioButtons methodSel "" pos:[16, 26] width:108 height:(exportMethodOptions.count * 30) labels:#("Export to File", "Stream to Listener") columns:1 visible:true
+	radioButtons methodSelEx "" pos:[16, methodSel.pos.y] width:108 height:16 labels:#("Export to File") columns:1 visible:false
+	radioButtons methodSelSt "" pos:[16, methodSelEx.pos.y + 17] width:108 height:16 labels:#("Stream to Listener") columns:1 visible:false
+
+	local exportOptions = #("Set checksum to 0")
+	groupBox groupExportOptions "Export Options" pos:[7, groupMethod.pos.y + groupMethod.height] width:166 height:(exportOptions.count * 40)
+	checkBox checkBoxChecksum exportOptions[1] pos:[16, groupMethod.pos.y + groupMethod.height + 17] width:108 height:16 checked:true
+
+	button exportAnim "Export Animation" pos:[7, groupExportOptions.pos.y + groupExportOptions.height] width:166 height:30
+	label versionLbl "v1.1.0" pos:[7, exportAnim.pos.y + 32] width:32 height:16
 	
 	fn calcNodeListChecksum =
 	(
@@ -209,7 +215,10 @@ rollout animExport "Anim Exporter" width:150 height:125
 	fn writeAnim target =
 	(
 		frameCount = ((animationRange.end as integer)/160) + 1
-		nodeListChecksum = calcNodeListChecksum()
+		nodeListChecksum = 0
+		if (not checkBoxChecksum.checked) then (
+			nodeListChecksum = calcNodeListChecksum()
+		)
 		
 		format "%\n" 16392 to:target
 		format "%\n" frameCount to:target
@@ -277,7 +286,6 @@ rollout animExport "Anim Exporter" width:150 height:125
 		maxVerStr = maxVer as string
 		if (maxVer == 4.2) then (maxVerStr += " (gmax)")
 		
-		groupMethod.caption += maxVerStr
 		if (maxVer <= 4.2) then
 		(
 			methodSel.visible = false
@@ -314,7 +322,6 @@ rollout animExport "Anim Exporter" width:150 height:125
 		else
 		(
 			outputPath = getSaveFileName	caption:"Save Animation Source File" \
-											filename:lastPath \
 											types:"JMA file (*.JMA)|*.JMA|JMO file (*.JMO)|*.JMO|JMR file (*.JMR)|*.JMR|JMM file (*.JMM)|*.JMM|JMT file (*.JMT)|*.JMT|JMW file (*.JMW)|*.JMW|JMZ file (*.JMZ)|*.JMZ|All files (*.*)|*.*|"
 			if (outputPath != undefined) then
 			(
