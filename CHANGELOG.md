@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Animation Exporter
+## [1.1.0] - 2025-02-24
+### Added
+- Option to export animation with node checksum set to 0
+
 # JMS Exporter
 ## [1.1.1] - 2024-05-09
 ### Fixed
